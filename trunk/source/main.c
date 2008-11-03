@@ -8,48 +8,28 @@
 #include "common.h"
 
 int main(void){
+    int i;
 
     PA_Init();
     PA_InitVBL();
     
-    PA_InitText(1,0); // On the top screen
+    PA_InitText(UP_LCD, 0); // On the top screen
     PA_Print(UP_LCD, "\n");
-    PA_Print(UP_LCD, " 10 + 20 = %f1\n", add(10, 20));
-    PA_Print(UP_LCD, " sin(45) = %f5\n", sin(deg2rad(PI/4)));
-    PA_Print(UP_LCD, "     deg2rad(45) = %f5\n", deg2rad(PI/4));
-    PA_Print(UP_LCD, " cos(45) = %f5\n", cos(deg2rad(PI/4)));
-/*
-    PA_LoadSpritePal(0, 0, (void*)sprite0_Pal);
 
-    PA_CreateSprite(0, 0,(void*)vaisseau_Sprite, OBJ_SIZE_32X32,1, 0, 128-16, 96-16); // Create the ship in the center...
-    PA_SetSpriteRotEnable(0,0,0);// Enable rotations and use Rotset 0... 
+    // test case
+    for (i = 0; i <= 180; i++ ) {
+        PA_Print(UP_LCD, " sin(%d) = %f5\n", i, sin(deg2rad(i)));
+        PA_WaitForVBL(); // process interrupt
+    }
     
-    s32 x = (128-16) << 8; // ship x position in 8bit fixed point
-    s32 y = (96-16) << 8; // Y
-    u16 angle = 0; // direction in which to move !
-    
-    
-*/
     while(1)
     {
-/*      angle += Pad.Held.Left - Pad.Held.Right;
-        PA_SetRotsetNoZoom(0, 0, angle); // Turn the ship in the correct direction
+        // input interrupt
         
-        if (Pad.Held.Up){ // Move forward
-            x += PA_Cos(angle);
-            y -= PA_Sin(angle);
-        }
-        if (Pad.Held.Down){ // Move backwards
-            x += -PA_Cos(angle);
-            y -= -PA_Sin(angle);        
-        }
+        // action
         
-        PA_OutputText(1, 5, 10, "Angle : %d  ", angle);
-    
-        PA_SetSpriteXY(0, 0, x>>8, y>>8); // Sprite position converted to normal...*/
-        
+        // loop
         PA_WaitForVBL(); // process interrupt
-
     }
     return 0;
 }
