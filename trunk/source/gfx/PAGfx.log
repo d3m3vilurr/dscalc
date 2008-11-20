@@ -4,11 +4,13 @@ If you have suggestions, problems, or anything, please mail me at mollusk@palib.
 Converting PAGfx.ini
 Transparent Color : Magenta
 
-1 sprites :
+2 sprites :
   button_bg : 256colors, 64x128, Pal : bbg_Pal, -> button_bg_Sprite
+  cursor : 256colors, 8x16, Pal : cursor_Pal, -> cursor_Sprite
 
-1 palettes :
+2 palettes :
   bbg_Pal, 45 colors
+  cursor_Pal, 2 colors
 
 Converted in 0 minutes 0 seconds
 
