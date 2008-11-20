@@ -11,10 +11,14 @@ void initButtonSprites();
 char getStylusValue();
 void clearButton();
 void pushButton();
+void initCursor();
+void moveCursor();
 
 uint8 pushed_stylus;
 uint8 stylus_page;    // now page
 int pushX, pushY;
+int cursorX, cursorY;
+int cursorPos;
 
 static int page = 2;
 int main(void){
@@ -33,6 +37,10 @@ int main(void){
     pushX = 0; pushY = 0;
     initButtonSprites();
     
+    cursorX = 0; cursorY = 8; // default input pos
+    cursorPos = 0;
+    initCursor();
+    
     while(1) {
         // test case
         //    PA_Print(UP_LCD, " sin(%d) = %f5\n", i, sin(deg2rad(i)));
@@ -44,19 +52,27 @@ int main(void){
         if (Stylus.Held) {
             if (!pushed_stylus) {
                 buf[0] = getStylusValue();
+                if (buf[0] == ' ') goto LOOP_END;
 
                 if (buf[0] == 'r') {
                     PA_Print(UP_LCD, "add(..) = %d\n", (int)add(10, 20));
                 } else {
                     PA_Print(UP_LCD, "%s", buf);
+                    cursorPos++;
+                    cursorX += 8;
+                    if (cursorPos % 32 == 0) {
+                        cursorY += 8;
+                        cursorX = 0;
+                    }
                 }
                 
             }
             pushed_stylus = 1;
         }
         // action
+        moveCursor();
         
-        // loop
+    LOOP_END:
         PA_WaitForVBL(); // process interrupt
     }
     return 0;
@@ -103,9 +119,14 @@ char getStylusValue() {
     int x = Stylus.X;
     int y = Stylus.Y;
     
-    pushX = x < 64 ? 0 : (x < 128 ? 1 : (x < 192 ? 2 : 3));
-    pushY = y < 48 ? 0 : (y < 96 ? 1 : (y < 144 ? 2 : 3));
+    pushX = 2 < x && x < 62 ? 0 : (66 < x && x < 126 ? 1 : (130 < x && x < 190 ? 2 : (194 < x && x < 254 ? 3 : -1)));
+    pushY = 2 < y && y < 46 ? 0 : (50 < y && y < 94 ? 1 : (98 < y && y < 142 ? 2 : (146 < y && y < 190 ? 3 : -1)));
     
+    if (pushX == -1 || pushY == -1) {
+        pushX = 0;
+        pushY = 0;
+        return ' ';
+    }
     pushButton();
 
     // TODO: page select refactoring
@@ -128,4 +149,43 @@ void clearButton() {
         0 // set frame is 0
     );
     pushed_stylus = false;
+}
+
+#define CURSOR_ID 17
+void initCursor() {
+    pushed_stylus = 1;
+    PA_LoadSpritePal(
+        UP_LCD,
+        1, // Palette number
+        (void*)cursor_Pal
+    );
+    
+    PA_CreateSprite(
+        UP_LCD, 
+        CURSOR_ID, // Sprite number
+        (void*)cursor_Sprite,
+        OBJ_SIZE_8X8,
+        COLOR256,
+        1, // Sprite palette number
+        0, 8 // button position
+    );
+    
+    PA_StartSpriteAnimEx(
+        UP_LCD,
+        CURSOR_ID,
+        0,
+        1,
+        2,
+        ANIM_UPDOWN,
+        -1
+    );
+}
+
+void moveCursor() {
+    PA_SetSpriteXY(
+        UP_LCD,
+        CURSOR_ID,
+        cursorX,
+        cursorY
+    );
 }
