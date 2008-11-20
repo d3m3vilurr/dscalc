@@ -6,12 +6,14 @@
 extern "C" {
 #endif
 
+#include "all_gfx.h"
+
 
 // Sprite files : 
-#include "vaisseau.c"
+#include "button_bg.c"
 
 // Palette files : 
-#include "sprite0.pal.c"
+#include "bbg.pal.c"
 
 
 #ifdef __cplusplus
