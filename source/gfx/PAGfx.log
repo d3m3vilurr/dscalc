@@ -2,12 +2,14 @@ PAGfx Converter, by Mollusk     www.palib.com
 If you have suggestions, problems, or anything, please mail me at mollusk@palib.info
 
 Converting PAGfx.ini
-Transparent Color : Black
+Transparent Color : Magenta
 
 1 sprites :
-  vaisseau : 256colors, 32x32, Pal : sprite0_Pal, -> vaisseau_Sprite
+  button_bg : 256colors, 64x128, Pal : bbg_Pal, -> button_bg_Sprite
 
 1 palettes :
-  sprite0_Pal, 12 colors
+  bbg_Pal, 45 colors
+
+Converted in 0 minutes 0 seconds
 
 Finished !

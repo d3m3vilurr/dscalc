@@ -10,6 +10,12 @@ extern "C" {
 #define UP_LCD 1
 #define DOWN_LCD 0
 
+#define BG_0 0
+#define BG_1 1
+#define BG_2 2
+#define BG_3 3
+
+#define COLOR256 1
 #define MAXCOL 32
 #define MAXROW 24
 
