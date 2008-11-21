@@ -12,10 +12,12 @@ extern "C" {
 // Sprite files : 
 #include "button_bg.c"
 #include "cursor.c"
+#include "label1.c"
 
 // Palette files : 
 #include "bbg.pal.c"
 #include "cursor.pal.c"
+#include "label1.pal.c"
 
 
 #ifdef __cplusplus
