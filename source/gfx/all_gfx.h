@@ -20,12 +20,14 @@
 // Sprite files : 
 extern const unsigned char button_bg_Sprite[8192] __attribute__ ((aligned (4))) ;  // Pal : bbg_Pal
 extern const unsigned char cursor_Sprite[128] __attribute__ ((aligned (4))) ;  // Pal : cursor_Pal
-extern const unsigned char label1_Sprite[40960] __attribute__ ((aligned (4))) ;  // Pal : label1_Pal
+extern const unsigned char label1_Sprite[20480] __attribute__ ((aligned (4))) ;  // Pal : label1_Pal
+extern const unsigned char label2_Sprite[20480] __attribute__ ((aligned (4))) ;  // Pal : label2_Pal
 
 // Palette files : 
 extern const unsigned short bbg_Pal[51] __attribute__ ((aligned (4))) ;
 extern const unsigned short cursor_Pal[2] __attribute__ ((aligned (4))) ;
-extern const unsigned short label1_Pal[34] __attribute__ ((aligned (4))) ;
+extern const unsigned short label1_Pal[19] __attribute__ ((aligned (4))) ;
+extern const unsigned short label2_Pal[9] __attribute__ ((aligned (4))) ;
 
 
 #endif

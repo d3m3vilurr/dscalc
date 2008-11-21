@@ -16,6 +16,8 @@ extern "C" {
 #define BG_3 3
 
 #define COLOR256 1
+#define COLOR16 0
+
 #define MAXCOL 32
 #define MAXROW 24
 
