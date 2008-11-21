@@ -13,6 +13,8 @@ void clearButton();
 void pushButton();
 void initCursor();
 void moveCursor();
+void initLabel();
+void printLabel();
 
 uint8 pushed_stylus;
 uint8 stylus_page;    // now page
@@ -40,6 +42,9 @@ int main(void){
     cursorX = 0; cursorY = 8; // default input pos
     cursorPos = 0;
     initCursor();
+    
+    initLabel();
+    changeLabel();
     
     while(1) {
         // test case
@@ -77,6 +82,8 @@ int main(void){
     }
     return 0;
 }
+
+#define BUTTON_START 107
 void initButtonSprites() {
     int i, j;
     
@@ -87,26 +94,26 @@ void initButtonSprites() {
         (void*)bbg_Pal
     );
     
-    for (i = 0; i < 4; i++) {
+    for (i = 0; i < 5; i++) {
         for (j = 0; j < 4; j++) {
             PA_CreateSprite(
                 DOWN_LCD, 
-                (4*i) + j, // Sprite number
+                (4 * i) + j + BUTTON_START, // Sprite number
                 (void*)button_bg_Sprite,
                 OBJ_SIZE_64X64,
                 COLOR256,
                 0, // Sprite palette number
-                i*64, j*48 // button position
-            );    
+                i*51, j*48 // button position
+            );
         }
     }
 }
 
-static const char InputTable1[4][4] = {
-  { '7', '8', '9', '+' },
-  { '4', '5', '6', '-' },
-  { '1', '2', '3', '*' },
-  { '0', '.', 'r', '/' }
+static const char InputTable1[4][5] = {
+  { '7', '8', '9', '+', 'b' },
+  { '4', '5', '6', '-', 'd' },
+  { '1', '2', '3', '*', 'c' },
+  { '0', '.', 'x', '/', 'r' }
 };
 static const char InputTable2[4][4] = {
   { '7', '8', '9', '+' },
@@ -119,8 +126,33 @@ char getStylusValue() {
     int x = Stylus.X;
     int y = Stylus.Y;
     
-    pushX = 2 < x && x < 62 ? 0 : (66 < x && x < 126 ? 1 : (130 < x && x < 190 ? 2 : (194 < x && x < 254 ? 3 : -1)));
-    pushY = 2 < y && y < 46 ? 0 : (50 < y && y < 94 ? 1 : (98 < y && y < 142 ? 2 : (146 < y && y < 190 ? 3 : -1)));
+    pushX = 2 < x && x < 48 
+            ? 0 
+            : (52 < x && x < 100 
+               ? 1
+               : (104 < x && x < 151 
+                  ? 2
+                  : (155 < x && x < 202
+                     ? 3
+                     : (206 < x && x < 253
+                        ? 4
+                        : -1
+                       )
+                    )
+                 )
+              );
+    pushY = 2 < y && y < 46
+            ? 0
+            : (50 < y && y < 94 
+               ? 1 
+               : (98 < y && y < 142 
+                  ? 2 
+                  : (146 < y && y < 190 
+                     ? 3 
+                     : -1
+                    )
+                 )
+              );
     
     if (pushX == -1 || pushY == -1) {
         pushX = 0;
@@ -130,28 +162,28 @@ char getStylusValue() {
     pushButton();
 
     // TODO: page select refactoring
-    if (stylus_page == 2)
-        return InputTable2[pushY][pushX];
+    //if (stylus_page == 2)
+    //    return InputTable2[pushY][pushX];
     return InputTable1[pushY][pushX];
 }
 
 void pushButton() {
     PA_SetSpriteAnim(
         DOWN_LCD,
-        (pushX*4)+pushY, // sprite number
+        (pushX*4)+pushY + BUTTON_START, // sprite number
         1 // set frame is 1
     );
 }
 void clearButton() {
     PA_SetSpriteAnim(
         DOWN_LCD,
-        (pushX*4)+pushY, // sprite number
+        (pushX*4)+pushY + BUTTON_START, // sprite number
         0 // set frame is 0
     );
     pushed_stylus = false;
 }
 
-#define CURSOR_ID 17
+#define CURSOR_ID 0
 void initCursor() {
     pushed_stylus = 1;
     PA_LoadSpritePal(
@@ -188,4 +220,39 @@ void moveCursor() {
         cursorX,
         cursorY
     );
+}
+
+#define LABEL1_START 86
+void initLabel() {
+    int i, j;
+    
+    pushed_stylus = 1;
+    PA_LoadSpritePal(
+        DOWN_LCD,
+        2, // Palette number
+        (void*)label1_Pal
+    );
+    
+    for (i = 0; i < 5; i++) {
+        for (j = 0; j < 4; j++) {
+            PA_CreateSprite(
+                DOWN_LCD, 
+                (4*i) + j + LABEL1_START, // Sprite number
+                (void*)label1_Sprite,
+                OBJ_SIZE_64X32,
+                COLOR256,
+                2, // Sprite palette number
+                i*51, (j*48+8) // button position
+            );
+            PA_SetSpriteAnim(
+                DOWN_LCD,
+                (4*i) + j + LABEL1_START, // sprite number
+                (5*j) + i // set frame is 0
+            );
+        }
+    } 
+}
+
+void changeLabel() {
+    
 }
