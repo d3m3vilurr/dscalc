@@ -1,0 +1,21 @@
+PAGfx Converter, by Mollusk     www.palib.com
+If you have suggestions, problems, or anything, please mail me at mollusk@palib.info
+
+Converting PAGfx.ini
+Transparent Color : Magenta
+
+4 sprites :
+  button_bg : 256colors, 64x128, Pal : bbg_Pal, -> button_bg_Sprite
+  cursor : 256colors, 8x16, Pal : cursor_Pal, -> cursor_Sprite
+  label1 : 16colors, 64x640, Pal : label1_Pal, -> label1_Sprite
+  label2 : 16colors, 64x640, Pal : label2_Pal, -> label2_Sprite
+
+4 palettes :
+  bbg_Pal, 51 colors
+  cursor_Pal, 2 colors
+  label1_Pal, 19 colors
+  label2_Pal, 9 colors
+
+Converted in 0 minutes 0 seconds
+
+Finished !
