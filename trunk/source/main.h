@@ -62,7 +62,7 @@ void addFunction();
 char getStylusValue();
 void clearButton();
 void pushButton();
-void changeLabel();
+void changeLabel(int);
 void printExpr();
 void moveCursor(int);
 
