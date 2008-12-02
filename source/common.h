@@ -7,21 +7,9 @@
 extern "C" {
 #endif
 
-#define UP_LCD 1
-#define DOWN_LCD 0
+int eval1(const char*);
+int eval2(const char*, int x);
 
-#define BG_0 0
-#define BG_1 1
-#define BG_2 2
-#define BG_3 3
-
-#define COLOR256 1
-#define COLOR16 0
-
-#define MAXCOL 32
-#define MAXROW 24
-
-float calc(const char*);
 //void plot(const char*, float, float);
 
 float add(float, float);

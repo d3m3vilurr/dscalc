@@ -1,9 +1,14 @@
 #include "common.h"
-#define pi() 3.1415926535897931
-#define e() 
-float calc(const char *expr) {
-    return add(10, 20); //stub
+//#define pi() 3.1415926535897931
+//#define e() 2.7182818284590451
+
+int eval1(const char *expr) {
+    return 0; //stub
 }
+int eval2(const char *expr, int x) {
+    return 0;
+}
+
 
 float add(float a, float b) {
     return a + b;
@@ -18,7 +23,7 @@ float mul(float a, float b) {
 }
 
 float div(float a, float b) {
-    return a/b;
+    return a / b;
 }
 
 float rad2deg(float a) {
