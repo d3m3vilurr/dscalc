@@ -38,7 +38,7 @@ int main(void){
         if (Pad.Held.L || Pad.Held.R) {
             if (!pushed_trig) {
                 stylus_page = stylus_page == 1 ? 2 : 1;
-                changeLabel();
+                changeLabel(stylus_page);
             }
             pushed_trig = 1;
         }

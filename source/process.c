@@ -58,6 +58,7 @@ uint8 actionStylus(const uint8 type) {
         moveCursor(-1);
         break;
     }
+    changeLabel(1);
     moveCursor(1);
     return 0;
 }
@@ -287,8 +288,9 @@ void initLabel() {
 }
 
 
-void changeLabel() {
+void changeLabel(int page) {
     int i, j;
+    stylus_page = page;
     int hidden_page = stylus_page == 1 ? LABEL2_START : LABEL1_START;
     int view_page = stylus_page == 1 ? LABEL1_START : LABEL2_START;
     
