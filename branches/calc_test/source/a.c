@@ -10,7 +10,7 @@ case TAN : push_eval( tan( RD(value_frist)) );
 #define MAX 100
 
 typedef enum {
-	blank,num, eos, plus, minus, times, divide, mod, pow, sqrt, lparen, rparen, comma, fun_x
+	blank,num, eos, plus, minus, times, divide, mod, pow, sqrt, fac, lparen, rparen, comma, fun_x
 } priority;
 
 typedef struct number{
@@ -96,6 +96,7 @@ priority get_token(char* symbol)
 	case '%': return mod;
 	case '^': return pow;
 	case 'R': return sqrt;
+	case '!': return fac;
 	case '\0': return eos;
 	case ' ' : return blank;
 	case '.' : return comma;
@@ -104,7 +105,9 @@ priority get_token(char* symbol)
 	}
 }
 
-
+/*-----------------------------------------------------
+	실수 연산 
+-----------------------------------------------------*/
 float add_f(float num1,float num2) { return num1+num2; }
 float sub_f(float num1,float num2) { return num1-num2; }
 float mul_f(float num1,float num2) { return num1*num2; }
@@ -117,6 +120,19 @@ float divi_f(float num1,float num2)
 		return 0;
 }
 
+
+
+/*-----------------------------------------------------
+	정수 연산 
+-----------------------------------------------------*/
+int fac_i(int num1)
+{ 
+	int i, res = 1;
+
+	for(i = num1; i > 0 ; i--) 
+		res *= i;
+	return res;
+}
 
 int sqrt_i(int x)
 {
@@ -167,7 +183,9 @@ int divi_i(int num1,int num2)
 		return 0;
 }
 
-void operation2(int flag)	// 스택에서 pop한 후 연산하고 결과를 push 
+
+
+void operation2(int flag)	// 스택에서 pop한 후 연산하고 결과를 push (피연산자가 1개인 연산) 
 {
 	priority token;
 	int state;
@@ -194,6 +212,12 @@ void operation2(int flag)	// 스택에서 pop한 후 연산하고 결과를 push
 				//	n.t.f = sqrt_f(num1->t.f); break;
 			}
 			break;
+		case fac:
+			switch (state){
+				case 0:
+					n.t.i = fac_i(num1->t.i); break;
+			}
+			break;
 		default : 
 			break;
 	}
@@ -201,7 +225,7 @@ void operation2(int flag)	// 스택에서 pop한 후 연산하고 결과를 push
 }
 
 
-void operation(int flag)	// 스택에서 pop한 후 연산하고 결과를 push 
+void operation(int flag)	// 스택에서 pop한 후 연산하고 결과를 push (피연산자가 2개인 연산) 
 {
 	priority token;
 	int state;
@@ -273,18 +297,6 @@ void operation(int flag)	// 스택에서 pop한 후 연산하고 결과를 push
 			switch (state){
 				case 0:
 					n.t.i = pow_i(num1->t.i,num2->t.i); break;
-				//case 1:
-				//	n.t.f = pow_f((float)num1->t.i,num2->t.f); break;
-				//case 2:
-				//	n.t.f = pow_f(num1->t.f,(float)num2->t.i); break;
-				//case 3: 
-				//	n.t.f = pow_f(num1->t.f,num2->t.f); break;
-			}
-			break;
-		case sqrt:
-			switch (state){
-				case 0:
-					n.t.i = sqrt_i(num2->t.i); break;
 				//case 1:
 				//	n.t.f = pow_f((float)num1->t.i,num2->t.f); break;
 				//case 2:
@@ -383,6 +395,11 @@ void postfix(char* str,int x)
 			push_op(&topOp,sqrt);
 			operation2(flag);
 			break;
+		case fac :
+			num_to_stack(temp,&j);
+			push_op(&topOp,fac);
+			operation2(flag);
+			break;
 		case num :
 			temp[j++] = str[i]; break;
 		case eos :
@@ -447,7 +464,7 @@ int main(void)
 	gets(str);
 	
 	//plot(str,1,5);	// f(x) 함수에서 [1,5]범위의 그래프 그리기 
-	postfix(str,0);		// f(x)로 입력한 함수라면 두번째 인자로 x값을 넣어준다.
+	postfix(str,0);
 	printf("\n\npostfix end\n\n");
 	
 	result = &stack[topStk];
