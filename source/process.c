@@ -52,6 +52,7 @@ uint8 actionStylus(const uint8 type) {
         break;
     case FUNCTION:
         addFunction();
+        moveCursor(-1);
         break;
     case ACTION:
         runAction();
@@ -64,11 +65,35 @@ uint8 actionStylus(const uint8 type) {
 }
 
 void runAction() {
+    /* no input except case */
+    if (exprPos <= 0) {
+        removeString(p_expr, printStrPos-1, 2, 340);
+        removeString(expr, exprPos-1, 2, 200);
+        return;
+    }
+    
     if (buf[0] == 'E') {
     } else if (buf[0] == 'B') {
+        if (checkValue(expr[exprPos-1]) == FUNCTION) {
+            int len = strlen(buf);
+            removeString(p_expr, printStrPos-len, len+1, 340);
+        } else {
+            removeString(p_expr, printStrPos-1, 2, 340);
+        }
+        moveCursor(-1);
     } else if (buf[0] == 'D') {
+        if (checkValue(expr[exprPos+1]) == FUNCTION) {
+            int len = strlen(buf);
+            removeString(p_expr, printStrPos, len+1, 340);
+        } else {
+            removeString(p_expr, printStrPos, 2, 340);
+        }
     } else if (buf[0] == 'C') {
     }
+    
+    /* remove action char */
+    removeString(expr, exprPos, 2, 200);
+
 }
 
 uint8 checkValue(const char v) {
@@ -80,7 +105,7 @@ uint8 checkValue(const char v) {
     
     memset(buf, '\0', 5);
 
-    if (v == 'E' || v == 'B' || v == 'D') {
+    if (v == 'E' || v == 'B' || v == 'D' || v == 'Z') {
         if (v == 'E')      strncpy(buf, "ENT", 3);  // ENTER
         else if (v == 'B') strncpy(buf, "BSP", 3);  // BACKSPACE
         else if (v == 'D') strncpy(buf, "DEL", 3);  // DELETE
@@ -105,10 +130,9 @@ uint8 checkValue(const char v) {
 
 void addFunction() {
     int size = strlen(buf);
-    insertString(expr, exprPos, "(", 200);
+    insertString(expr, exprPos+1, "(", 200);
     p_expr[printStrPos] = '(';
     insertString(p_expr, printStrPos, buf, 340);
-    //printStrPos+=size-1;
     exprPos++;
     moveCursor(size+1);
 }
@@ -207,6 +231,17 @@ void initCursor() {
 }
 
 void moveCursor(int move) {
+    int len = move;
+    if (move < 0) {
+        if (checkValue(expr[exprPos-1]) == FUNCTION) {
+            len = strlen(buf) * -1;
+        }
+    } else if (move > 0) {
+        if (checkValue(expr[exprPos]) == FUNCTION) {
+            len = strlen(buf);
+        }
+    }
+    printStrPos += len;
     if (move < 0) {
         if (exprPos == 0) return;
         exprPos -= 1;
@@ -214,7 +249,6 @@ void moveCursor(int move) {
         if (exprPos >= strlen(expr)) return;
         exprPos += 1;
     }
-    printStrPos += move; // TYPE SIZE ADD
     printStrPos = printStrPos < 0 ? 0 : printStrPos;
     exprPos = exprPos < 0 ? 0 : exprPos;
     
@@ -313,6 +347,9 @@ void changeLabel(int page) {
 
 void printExpr() {
     PA_ClearTextBg(UP_LCD);
+    // DEBUG CODE
+    PA_OutputText(UP_LCD, 1, 20, expr);
+
     PA_BoxTextNoWrap(UP_LCD, 1, 1, 30, 18, p_expr, 340);
 }
 
