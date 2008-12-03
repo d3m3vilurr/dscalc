@@ -5,7 +5,6 @@
 #include "gfx/all_gfx.c"
 #include "gfx/all_gfx.h"
 #include "main.h"
-#include "queue.h"
 
 void init() {
     PA_Init();
@@ -18,7 +17,11 @@ void init() {
     initButtonSprites();
     
     cursorX = 1; cursorY = 1; // default input pos
-    cursorPos = 0; printStrPos = 0; exprPos  = 0;
+    printStrPos = 0; exprPos  = 0;
+    count_x = 0;
+    
+    overview_expr = 0;
+    
     initCursor();
     
     initLabel();
@@ -26,7 +29,7 @@ void init() {
     memset(expr, 0, 200);
     memset(p_expr, 0, 340);
     
-    queue_init();
+    expr_init();
 }
 
 void insertString(char *target, const int pos, const char *text, const int limit) {
@@ -49,6 +52,9 @@ uint8 actionStylus(const uint8 type) {
     case NON_VALUE:
         return 1;
     case NUMBER:
+        break;
+    case VARIABLE:
+        count_x++;
         break;
     case FUNCTION:
         addFunction();
@@ -73,20 +79,31 @@ void runAction() {
     }
     
     if (buf[0] == 'E') { // enter
-    
+        removeString(p_expr, printStrPos, 1, 340);
+        expr_insert(p_expr);
+        if (count_x <= 0) { // expression
+            int result = eval1(expr);
+            overview_expr = -1;
+        } else { // equation
+            
+        }
     } else if (buf[0] == 'B') { // backspace
-        if (checkValue(expr[exprPos-1]) == FUNCTION) {
+        int v = checkValue(expr[exprPos-1]);
+        if (v == FUNCTION) {
             int len = strlen(buf);
             removeString(p_expr, printStrPos-len, len+1, 340);
         } else {
+            if (v == VARIABLE) count_x--;
             removeString(p_expr, printStrPos-1, 2, 340);
         }
         moveCursor(-1);
     } else if (buf[0] == 'D') { // delete
-        if (checkValue(expr[exprPos+1]) == FUNCTION) {
+        int v = checkValue(expr[exprPos+1]);
+        if (v == FUNCTION) {
             int len = strlen(buf);
             removeString(p_expr, printStrPos, len+1, 340);
         } else {
+            if (v == VARIABLE) count_x--;
             removeString(p_expr, printStrPos, 2, 340);
         }
     } else if (buf[0] == 'C') { // clear
@@ -94,6 +111,7 @@ void runAction() {
         memset(p_expr, '\0', 340);
         exprPos = 0;
         printStrPos = 0;
+        count_x = 0;
         moveCursor(0);
         return;
     }
@@ -109,6 +127,8 @@ uint8 checkValue(const char v) {
     if (v == 'p' || v == 'e') return CONSTANT;
     if (v == '!' || v == '(' || v == ')'
         || v == '+' || v == '-' || v == '*' || v == '/') return SYMBOL;
+    if (v == 'x') return VARIABLE;
+    
     
     memset(buf, '\0', 5);
 
@@ -132,6 +152,7 @@ uint8 checkValue(const char v) {
     else if (v == 'a') strncpy(buf, "abs", 3);
     else if (v == 'r') strncpy(buf, "rad", 3);
     else if (v == 'd') strncpy(buf, "deg", 3);
+    else if (v == 'm') strncpy(buf, "rand", 4);
     return FUNCTION;
 }
 
@@ -355,8 +376,59 @@ void changeLabel(int page) {
 void printExpr() {
     PA_ClearTextBg(UP_LCD);
     // DEBUG CODE
-    PA_OutputText(UP_LCD, 1, 20, expr);
-
-    PA_BoxTextNoWrap(UP_LCD, 1, 1, 30, 18, p_expr, 340);
+    //PA_OutputText(UP_LCD, 1, 20, expr);
+    double ln_10 = log(10)/log(2.7182818284590451);
+    PA_OutputText(UP_LCD, 2, 10, "%d.%d", (int)ln_10, (int)((ln_10-(int)ln_10)*100000000));
+    PA_BoxTextNoWrap(UP_LCD, 1, 1, 30, 10, p_expr, 340);
+    overviewExpr();
+    
 }
 
+void overviewExpr() {
+    if (overview_expr == -1) { // view current
+        PA_BoxTextNoWrap(UP_LCD, 1, 15, 30, 23, exprs[minPos], 340);
+    } else {
+        PA_BoxTextNoWrap(UP_LCD, 1, 15, 30, 23, exprs[overview_expr], 340);
+    }
+}
+
+void expr_init() {
+    int i;
+    for (i = -10; i < 0; i++) {
+        order[10+i] = i;
+        memset(exprs[10+i], '\0', 340);
+    }
+}
+
+void expr_insert(const char *expr) {
+    findMinPos();
+    strncpy(exprs[minPos], expr, 340);
+    order[minPos] = maxOrder+1;
+}
+
+void findMinPos() {
+    int i, minP = 0, max = order[0];
+    
+    for (i = 1; i < 10; i++) {
+        if (order[minP] > order[i]) minP = i;
+        if (max < order[i]) order[i] = max;
+    }
+    
+    minPos = minP;
+    maxOrder = max;
+}
+
+void overviewPrevExpr() {
+    int next = overview_expr - 1;
+    if (overview_expr == -1) next = minPos - 1;
+    if (next < 0) next = 9;
+    if (exprs[next][0] == '\0') return;
+    overview_expr = next;
+}
+void overviewNextExpr() {
+    int next = overview_expr + 1;
+    if (overview_expr == -1) next = minPos + 1;
+    if (next > 9) next = 0;
+    if (exprs[next][0] == '\0') return;
+    overview_expr = next;
+}

@@ -21,18 +21,22 @@ extern "C" {
 #define MAXCOL 32
 #define MAXROW 24
 
-uint8 pushed_stylus, pushed_trig, pushed_left, pushed_right;
+uint8 pushed_stylus, pushed_trig, pushed_left, pushed_right, pushed_up, pushed_down;
 uint8 stylus_page;    // now page
 int pushX, pushY;
 int cursorX, cursorY;
-int cursorPos, printStrPos, exprPos;
+int printStrPos, exprPos;
+int count_x;
+int overview_expr;
+int minPos, maxOrder;
+char exprs[10][340];
+uint8 order[10];
 
 static int page = 2;
 
-char expr[200], p_expr[340], buf[5], expr_buf;
+char expr[200], p_expr[340], buf[5];
 
-//enum {NUMBER, FUNCTION2, FUNCTION3, FUNCTION4, CONSTANT, SYMBOL, ACTION, NON_VALUE};
-enum {NUMBER, FUNCTION, CONSTANT, SYMBOL, ACTION, NON_VALUE};
+enum {NUMBER, FUNCTION, CONSTANT, SYMBOL, ACTION, NON_VALUE, VARIABLE};
 
 static const char InputTable1[4][5] = {
   { '7', '8', '9', '+', 'B' },
@@ -44,7 +48,7 @@ static const char InputTable2[4][5] = {
   { '(', ')', 'p', 'e', '!' },
   { 's', 'c', 't', 'l', 'r' },
   { 'S', 'C', 'T', 'L', 'd' },
-  { '^', 'R', 'f', 'a', 'p' }
+  { '^', 'R', 'm', 'a', 'p' }
 };
 
 void init();
@@ -65,7 +69,13 @@ void pushButton();
 void changeLabel(int);
 void printExpr();
 void moveCursor(int);
+void overviewExpr();
+void overviewNextExpr();
+void overviewPrevExpr();
 
+void expr_init();
+void expr_insert(const char *);
+void findMinPos();
 #ifdef __cplusplus
 }
 #endif

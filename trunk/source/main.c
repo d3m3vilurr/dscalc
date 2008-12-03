@@ -20,6 +20,12 @@ int main(void){
         if (Pad.Released.Right || Pad.Released.A) {
             pushed_right = 0;
         }
+        if (Pad.Released.Up || Pad.Released.X) {
+            pushed_up = 0;
+        }
+        if (Pad.Released.Down || Pad.Released.B) {
+            pushed_down = 0;
+        }
 
         if (Stylus.Held) {
             if (!pushed_stylus) {
@@ -55,7 +61,18 @@ int main(void){
             }
             pushed_right = 1;
         }
-        
+        if (Pad.Held.Up || Pad.Held.X) {
+            if (!pushed_up) {
+                overviewPrevExpr();
+            }
+            pushed_up = 1;
+        }
+        if (Pad.Held.Down || Pad.Held.B) {
+            if (!pushed_down) {
+                overviewNextExpr();
+            }
+            pushed_down = 1;
+        }
         // teardown
         printExpr();
         //moveCursor(1);
