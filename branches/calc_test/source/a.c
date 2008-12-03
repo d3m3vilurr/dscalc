@@ -282,9 +282,8 @@ number sqrt_(number num1)
 	number res;
 
 	if (num1.num_flag == 1){		// num이 실수 일때 
-		res.num_flag = 0;
-		res.t.i = 0;
-		printf("아직 실수 sqrt연산은 미구현\n");		// 실수 sqrt_()미구현
+		res.num_flag = 1;
+		res.t.f = (float)sqrt(num1.t.f);
 	}else{
 		res.num_flag = 0;
 
@@ -352,22 +351,32 @@ number rand_(number num1)
 
 number pow_(number num1, number num2)
 {
-    int i, op, n, state;
 	number res;
+	int state;
 
 	state = (num1.num_flag * 2 ) + (num2.num_flag);
-	if (state > 0 ){								// num1 또는 num2가 이 실수 일때 
+	if (state >0 )
+		res.num_flag = 1;
+	else
 		res.num_flag = 0;
-		res.t.i = 0;
-		printf("아직 실수 pow연산은 미구현\n");		// 실수 pow_()미구현
-	}else{
-		res.num_flag = 0;
-		op = n = num1.t.i;
-		for (i = 0; i < num2.t.i - 1; i++) {
-			n = n * op;
-		}
-		res.t.i = n;
-	}
+
+	switch (state){
+		case 0:
+			res.t.i = (float)pow(num1.t.i,num2.t.i); 
+			break;
+		case 1:
+			res.t.f = (float)pow((float)num1.t.i ,num2.t.f); 
+			break;
+		case 2:
+			res.t.f = (float)pow(num1.t.f,(float)num2.t.i); 
+			break;
+		case 3: 
+			res.t.f = (float)pow(num1.t.f , num2.t.f); 
+			break;
+		default:
+			break;
+	}			
+
     return res;
 }
 
@@ -765,7 +774,7 @@ void eval(char* str,number n)
 		default :				// 연산자인 경우
 			if( get_token(&str[i]) == minus ){ 				
 				if( get_token(&str[i-1]) == minus || get_token(&str[i-1]) == lparen || i==0 || get_token(&str[i-1]) == mod 
-							|| get_token(&str[i-1]) == times || get_token(&str[i-1]) == divide){
+							|| get_token(&str[i-1]) == times || get_token(&str[i-1]) == divide ){
 					temp[j++] = str[i];
 					temp[j++] = '1';
 					num_to_stack(temp,&j);
