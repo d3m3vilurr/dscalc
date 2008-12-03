@@ -352,26 +352,31 @@ number rand_(number num1)
 number pow_(number num1, number num2)
 {
 	number res;
-	int state;
+	int state;//i, op, n;
 
 	state = (num1.num_flag * 2 ) + (num2.num_flag);
-	if (state >0 )
-		res.num_flag = 1;
-	else
-		res.num_flag = 0;
-
+	
 	switch (state){
 		case 0:
-			res.t.i = (float)pow(num1.t.i,num2.t.i); 
+			if(num2.t.i < 0) {
+				res.num_flag = 1;
+				res.t.f = (float)pow(num1.t.i,num2.t.i); 
+			} else {
+				res.num_flag = 0;
+				res.t.i = (int)pow(num1.t.i, num2.t.i);
+			}
 			break;
 		case 1:
-			res.t.f = (float)pow((float)num1.t.i ,num2.t.f); 
+			res.t.f = (float)pow(num1.t.i ,num2.t.f);
+			res.num_flag = 1;
 			break;
 		case 2:
-			res.t.f = (float)pow(num1.t.f,(float)num2.t.i); 
+			res.t.f = (float)pow(num1.t.f,num2.t.i);
+			res.num_flag = 1;
 			break;
 		case 3: 
 			res.t.f = (float)pow(num1.t.f , num2.t.f); 
+			res.num_flag = 1;
 			break;
 		default:
 			break;
@@ -774,7 +779,7 @@ void eval(char* str,number n)
 		default :				// 연산자인 경우
 			if( get_token(&str[i]) == minus ){ 				
 				if( get_token(&str[i-1]) == minus || get_token(&str[i-1]) == lparen || i==0 || get_token(&str[i-1]) == mod 
-							|| get_token(&str[i-1]) == times || get_token(&str[i-1]) == divide ){
+							|| get_token(&str[i-1]) == times || get_token(&str[i-1]) == divide || get_token(&str[i-1]) == _pow ){
 					temp[j++] = str[i];
 					temp[j++] = '1';
 					num_to_stack(temp,&j);
