@@ -10,7 +10,7 @@ case TAN : push_eval( tan( RD(value_frist)) );
 #define MAX 100
 
 typedef enum {
-	blank,tap,rparen,comma,num,eos,plus,minus,times,divide,mod,pow,sqrt,fac,
+	blank,tap,rparen,comma,num,eos,plus,minus,times,divide,mod,pow,abs1,sqrt,fac,
 	sin,cos,tan,sec,csc,cot,log,ln,fun_x,lparen
 } priority;
 
@@ -108,6 +108,7 @@ priority get_token(char* symbol)
 	case 'T': return cot;
 	case 'l': return log;
 	case 'L': return ln;
+	case 'a': return abs1;
 	case '\0': return eos;
 	case '\t': return tap;
 	case ' ' : return blank;
@@ -179,7 +180,7 @@ number fac_(number num1)
 		res.num_flag = 0;
 		if(num1.t.i < 0 ){			// num1이 음수 일때 
 			res.t.i = 0;
-			printf("이 함수의 올바른 입력이 아닙니다.\n");		
+			printf("이 함수의 올바른 입력이 아닙니다(FAC).\n");		
 			return res;
 		}
 		res.t.i = 1;
@@ -200,9 +201,16 @@ number sqrt_(number num1)
 		printf("아직 실수 sqrt연산은 미구현\n");		// 실수 sqrt_()미구현
 	}else{
 		res.num_flag = 0;
+
+		if(num1.t.i < 0 ){
+			res.t.i = 0;
+			printf("이 함수의 올바른 입력이 아닙니다.(SQRT)\n");
+			return res;
+		}
+
 		op = num1.t.i;
 		n = 0;
-
+		
 		one = 1UL << (32 - 2);
 		while (one > op)
 			one >>= 2;
@@ -218,6 +226,29 @@ number sqrt_(number num1)
 		res.t.i = n;
 	}
     return res;
+}
+
+number abs_(number num1)
+{
+	number res;
+
+	if (num1.num_flag == 1){
+		res.num_flag = 1;
+		if(num1.t.f > 0 ){
+			res.t.f = num1.t.f;
+		}else{
+			//res.t.f = abs(num1.t.f);		// abc함수 호출
+		}
+	}else{
+		res.num_flag = 0;
+		if(num1.t.i > 0 ){
+			res.t.i = num1.t.i;
+		}else{
+			//res.t.i = abs(num1.t.i);		// abc함수 호출 
+		}
+	}
+
+	return res;
 }
 
 number pow_(number num1, number num2)
@@ -331,36 +362,6 @@ number mul_(number num1,number num2)
 	return res; 
 }
 
-number modul_(number num1,number num2) 
-{	
-	int state;
-	number res;
-	
-	state = (num1.num_flag * 2 ) + (num2.num_flag);
-	if (state >0 )
-		res.num_flag = 1;
-	else
-		res.num_flag = 0;
-	
-	switch (state){
-		case 0:
-			res.t.i = num1.t.i % num2.t.i; 
-			break;
-		case 1:
-			//res.t.f = (float)num1.t.i % num2.t.f;		// 실수 mod연산은 제외  
-			break;
-		case 2:
-			//res.t.f = num1.t.f % (float)num2.t.i; 
-			break;
-		case 3: 
-			//res.t.f = num1.t.f % num2.t.f; 
-			break;
-		default:
-			break;
-	}			
-	return res; 
-}
-
 number divi_(number num1,number num2) 
 {	
 	int state;
@@ -379,26 +380,65 @@ number divi_(number num1,number num2)
 		return res;
 	}else{
 		switch (state){
-			case 0:
-				res.t.i = num1.t.i / num2.t.i; 
-				break;
-			case 1:
-				res.t.f = (float)num1.t.i / num2.t.f; 
-				break;
-			case 2:
-				res.t.f = num1.t.f / (float)num2.t.i; 
-				break;
-			case 3: 
-				res.t.f = num1.t.f / num2.t.f; 
-				break;
-			default:
-				break;
+		case 0:
+			res.t.i = num1.t.i / num2.t.i; 
+			break;
+		case 1:
+			res.t.f = (float)num1.t.i / num2.t.f; 
+			break;
+		case 2:
+			res.t.f = num1.t.f / (float)num2.t.i; 
+			break;
+		case 3: 
+			res.t.f = num1.t.f / num2.t.f; 
+			break;
+		default:
+			break;
 		}			
 		return res;
 	}
 }
 
 
+number modul_(number num1,number num2) 
+{	
+	int state;
+	number res, n;
+	
+	state = (num1.num_flag * 2 ) + (num2.num_flag);
+	if (state >0 )
+		res.num_flag = 1;
+	else
+		res.num_flag = 0;
+
+
+	switch (state){
+		case 0:
+			res.t.i = num1.t.i % num2.t.i;
+			break;
+		case 1:
+			n = divi_(num1,num2);
+			n.t.f = (int)n.t.f * num2.t.f;
+			n = abs_(n);
+			res.t.f = num1.t.i - n.t.f;
+			break;
+		case 2:
+			n = divi_(num1,num2);
+			n.t.f = (int)n.t.f * num2.t.i;
+			n = abs_(n);
+			res.t.f = num1.t.f - n.t.f;
+			break;
+		case 3: 
+			n = divi_(num1,num2);
+			n.t.f = (int)n.t.f * num2.t.f;
+			n = abs_(n);
+			res.t.f = num1.t.f - n.t.f;
+			break;
+		default:
+			break;
+	}			
+	return res; 
+}
 
 
 void operation1()	// 스택에서 pop한 후 연산하고 결과를 push (피연산자가 1개인 연산) 
@@ -414,6 +454,8 @@ void operation1()	// 스택에서 pop한 후 연산하고 결과를 push (피연산자가 1개인 연
 			res = sqrt_(num1); break;
 		case fac:	
 			res = fac_(num1); break;
+		case abs1:
+			res = abs_(num1); break;
 		default : 
 			break;
 	}
@@ -536,8 +578,9 @@ void postfix(char* str,int x)
 				num_to_stack(temp,&j);
 				push_op(&topOp,times);
 				push(&topStk,fx);
+				operation2();
 			}else{
-				temp[j++] = '5'; 
+				temp[j++] = '5';	// 임시로 x값 5를 받음... 
 				num_to_stack(temp,&j);
 			}
 			break;
@@ -545,22 +588,16 @@ void postfix(char* str,int x)
 			temp[j++] = str[i]; 
 			float_flag = 1;		
 			break;
-		case sqrt:				// 'R'
-			num_to_stack(temp,&j);
-			push_op(&topOp,sqrt);
-			operation1();
-			break;
-		case fac :				// '!'
-			num_to_stack(temp,&j);
-			push_op(&topOp,fac);
-			operation1();
-			break;
 		case num :				// 숫자 
 			temp[j++] = str[i]; break;
 		case eos :				// 입력의 끝 '\0'
 			num_to_stack(temp,&j);
-			while(topOp != -1 ){	
-				operation2();
+			while(topOp != -1 ){
+				if ((oper[topOp]) != fac && (oper[topOp] != sqrt)){
+					operation2();
+				}else{
+					operation1();
+				}
 			}
 			break;
 		case lparen :			// '('
@@ -570,16 +607,22 @@ void postfix(char* str,int x)
 		case rparen :			// ')'
 			num_to_stack(temp,&j);
 			while(oper[topOp] != lparen){  
-				operation2();
+				if(oper[topOp]==sqrt || oper[topOp]==fac ||oper[topOp]==sqrt||oper[topOp]==abs1){
+					operation1();
+				}else{
+					operation2();
+				}
 			}
 			pop_op(&topOp);		// '(' 제거 
 			flag--; 
 			break;
-		default :				// 그 외의 연산자인 경우
-			if( get_token(&str[i-1]) == minus || get_token(&str[i-1]) == lparen || i == 0){
-				temp[j++] = str[i];
-				i++; 
-				continue;
+		default :				// 연산자인 경우
+			if( get_token(&str[i]) == minus ){ 				
+				if( get_token(&str[i-1]) == minus || get_token(&str[i-1]) == lparen || i==0 || get_token(&str[i-1]) == mod){
+					temp[j++] = str[i];
+					i++; 
+					continue;
+				}
 			}
 			num_to_stack(temp,&j);
 			if(topOp == -1){	// 스택에 연산자가 아무것도 없는 경우 
@@ -588,7 +631,11 @@ void postfix(char* str,int x)
 				push_op(&topOp,get_token(&str[i])); 
 			}else if(topOp > -1 ){		 
 				if(oper[topOp] >= get_token(&str[i])){
-					operation2(); i--;
+					if ((oper[topOp]) != fac && (oper[topOp] != sqrt)){
+						operation2(); i--;
+					}else{
+						operation1();
+					}
 				}else{
 					push_op(&topOp,get_token(&str[i]));
 				}
