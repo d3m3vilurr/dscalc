@@ -29,14 +29,25 @@ int main(void){
 
         if (Stylus.Held) {
             if (!pushed_stylus) {
-                insertString(expr, exprPos, " ", 200);
-                expr[exprPos] = getStylusValue();
-                insertString(p_expr, printStrPos, " ", 340);
-                p_expr[printStrPos] = expr[exprPos];
+                if (result_print == 2) {
+                    insertString(inputValue, inputPos, " ", 100);
+                    inputValue[inputPos] = getStylusValue();
+                    if (actionStylus2(checkValue(inputValue[inputPos])))
+                        goto LOOP_END;
+//                    if (on_graph) {
+//                    
+//                    } else {
+//                    
+//                    }
+                } else {
+                    insertString(expr, exprPos, " ", 200);
+                    expr[exprPos] = getStylusValue();
+                    insertString(p_expr, printStrPos, " ", 340);
+                    p_expr[printStrPos] = expr[exprPos];
 
-                if (actionStylus(checkValue(expr[exprPos])))
-                    goto LOOP_END;
-                
+                    if (actionStylus(checkValue(expr[exprPos])))
+                        goto LOOP_END;
+                }
             }
             pushed_stylus = 1;
         }

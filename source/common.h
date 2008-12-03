@@ -8,8 +8,8 @@
 extern "C" {
 #endif
 
-Num eval1(const char*);
-Num eval2(const char*, Num x);
+Num eval1(char*);
+Num eval2(char*, Num x);
 
 //void plot(const char*, float, float);
 
@@ -24,6 +24,7 @@ float div(float, float);
 float rad2deg(float);
 float deg2rad(float);
 
+int randInt(int);
 #ifdef __cplusplus
 }
 #endif

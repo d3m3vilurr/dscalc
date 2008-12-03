@@ -32,6 +32,8 @@ void init() {
     memset(p_expr, 0, 340);
     
     expr_init();
+
+    PA_InitRand();
 }
 
 void insertString(char *target, const int pos, const char *text, const int limit) {
@@ -54,6 +56,8 @@ uint8 actionStylus(const uint8 type) {
     case NON_VALUE:
         return 1;
     case NUMBER:
+    case CONSTANT:
+    case SYMBOL:
         break;
     case VARIABLE:
         count_x++;
@@ -66,12 +70,67 @@ uint8 actionStylus(const uint8 type) {
         runAction();
         moveCursor(-1);
         break;
+    default:
+        removeString(p_expr, printStrPos, 1, 340);
+        removeString(expr, exprPos, 1, 200);
+        break;
     }
     changeLabel(1);
     moveCursor(1);
     return 0;
 }
+uint8 actionStylus2(const uint8 type) {
+    switch (type) {
+    case NON_VALUE:
+    case CONSTANT:
+    case SYMBOL:
+    case VARIABLE:
+        return 1;
+    case NUMBER:
+        inputPos++;
+        return 0;
+    case ACTION:
+        runAction2();
+        break;
+    case GRAPHIC:
+        on_graph = on_graph == 1 ? 0 : 1;
+        break;
+    default:
+        break;
+    }
+    removeString(inputValue, inputPos, 1, 100);
+    
+    return 0;
+}
 
+void runAction2() {
+    if (buf[0] == 'E') { // enter
+        if (inputValue[0] == 'E') { // return value input mode
+            result_print = 0;
+            on_graph = 0;
+            inputed_x = 0;
+        } else {
+            var_x[0].num_flag = 0;
+            var_x[1].num_flag = 0;
+            var_x[0].t.i = 0;
+            var_x[1].t.i = 360;
+            inputed_x = 1;
+            if (on_graph) {
+                
+            } else {
+                result = eval2(expr, var_x[1]);
+            }
+
+        }
+        inputPos = 0;
+        memset(inputValue, '\0', 100);
+
+    } else if (buf[0] == 'B') { // backspace
+    
+    } else if (buf[0] == 'D') { // delete
+    
+    }
+}
 void runAction() {
     /* no input except case */
     if (exprPos <= 0) {
@@ -86,6 +145,7 @@ void runAction() {
         if (count_x <= 0) { // expression
 //            printResult(eval1(expr));
             result_print = 1;
+            result = eval1(expr);
         } else { // equation
             result_print = 2;
         }
@@ -130,6 +190,7 @@ uint8 checkValue(const char v) {
     if (v == '!' || v == '(' || v == ')'
         || v == '+' || v == '-' || v == '*' || v == '/') return SYMBOL;
     if (v == 'x') return VARIABLE;
+    if (v == 'P') return GRAPHIC;
     
     
     memset(buf, '\0', 5);
@@ -141,7 +202,6 @@ uint8 checkValue(const char v) {
         else if (v == 'Z') strncpy(buf, "CLR", 3);  // CLEAR
         return ACTION;
     }
-    
     if (v == 'L') strncpy(buf, "ln", 2);
     else if (v == 'R') strncpy(buf, "root", 4);
     else if (v == 's') strncpy(buf, "sin", 3);
@@ -189,6 +249,7 @@ void initButtonSprites() {
                 0, // Sprite palette number
                 i*51, j*48 // button position
             );
+//            PA_SetSpritePrio(DOWN_LCD, (4 * i) + j + BUTTON_START, 0);
         }
     }
 }
@@ -347,6 +408,9 @@ void initLabel() {
                 (5*j) + i // set frame is 0
             );
 
+//            PA_SetSpritePrio(DOWN_LCD, (4*i) + j + LABEL1_START, 3);
+//            PA_SetSpritePrio(DOWN_LCD, (4*i) + j + LABEL2_START, 3);
+
         }
     } 
 }
@@ -377,25 +441,82 @@ void changeLabel(int page) {
 
 void printExpr() {
     PA_ClearTextBg(UP_LCD);
-    // DEBUG CODE
-    //PA_OutputText(UP_LCD, 1, 20, expr);
-    //double ln_10 = log(10)/log(2.7182818284590451);
-    //PA_OutputText(UP_LCD, 2, 10, "%d.%d", (int)ln_10, (int)((ln_10-(int)ln_10)*100000000));
     PA_BoxTextNoWrap(UP_LCD, 1, 1, 30, 10, p_expr, 340);
     overviewExpr();
-    if (result_print == 1) printResult(eval1(expr));
-    else if (result_print == 2) printResult(eval2(expr, var_x));
+    if (result_print == 1) printResult(result);
+    else if (result_print == 2 && inputed_x) {
+        if (on_graph) {
+            printGraph();
+        } else {
+            printResult(result);
+        }
+    }
     
 }
 void printResult(Num n) {
     char result[100];
-    if (n.type) { // float
-        snprintf(result, 100, "  = %d.%d", (int)n.v.f, (int)((n.v.f - (int)n.v.f)*1000000000));
+    if (n.num_flag) { // float
+        snprintf(result, 100, "  = %d.%d", (int)n.t.f, (int)((n.t.f - (int)n.t.f)*1000000000));
     } else { // int
-        snprintf(result, 100, "  = %d", n.v.i);
+        snprintf(result, 100, "  = %d", n.t.i);
     }
     
     PA_BoxTextNoWrap(UP_LCD, 1, 12, 30, 14, result, 100);
+}
+
+void hiddenStripe() {
+    int i, j;
+    for (i = 0; i < 5; i++) {
+        for (j = 0; j < 4; j++) {
+            PA_SetSpriteX(
+                DOWN_LCD,
+                (4*i) + j + LABEL1_START,
+                400
+            );
+
+            PA_SetSpriteX(
+                DOWN_LCD,
+                (4*i) + j + LABEL2_START,
+                400
+            );
+            
+            PA_SetSpriteX(
+                DOWN_LCD,
+                (4 * i) + j + BUTTON_START,
+                400
+            );
+        }
+    }
+}
+void printGraph() {
+    float step = var_x[1].t.i - var_x[0].t.i / 100.;
+    float r[100];
+    int i, max = 0, min = 0;
+    Num n, re;
+
+    hiddenStripe();
+    PA_Init8bitBg (DOWN_LCD, 0);
+    PA_SetBgPalCol(DOWN_LCD, 0, PA_RGB(31, 31, 31));
+
+    n.num_flag = 1;
+    for (i = 0; i < 100; i++) {
+        n.t.f = var_x[0].t.i + (step * i);
+        
+        re = eval2(expr, n);
+        if (re.num_flag == 0) {
+            r[i] == (float)re.t.i;
+        } else {
+            r[i] == re.t.f;
+        }
+        if (r[i] < min) min = r[i];
+        if (r[i] > max) max = r[i];
+    }
+    PA_Print(UP_LCD, "%d %d", max, min);
+    for (i = 0; i < 100; i++) {
+//        PA_Print(UP_LCD, "%d\n", 192-(int)(192*r[i]/(max-min)));
+        PA_Put8bitPixel(DOWN_LCD, 2*i+30, 192-(int)(192*r[i]/(max-min)), 1);  
+    }
+    
 }
 
 void overviewExpr() {
