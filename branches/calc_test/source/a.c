@@ -83,41 +83,43 @@ priority pop_op(int *top)
 priority get_token(char* symbol)
 {
 	switch( *symbol) {
-	case 'p': return pi;
-	case 'e': return e;
-	case '(': return lparen;
-	case ')': return rparen;
-	case '+': return plus;
-	case '-': return minus;
-	case '*': return times;
-	case '/': return divide;
-	case '%': return mod;
-	case '^': return _pow;
-	case 'R': return _sqrt;
-	case '!': return _fac;
-	case 's': return _sin;
-	case 'c': return _cos;
-	case 't': return _tan;
-	case 'S': return _sec;
-	case 'C': return _csc;
-	case 'T': return _cot;
-	case 'l': return _log;
-	case 'L': return _ln;
-	case 'a': return _abs;
-	case 'm': return _rand;
-	case 'r': return rad;
-	case 'd': return deg;
-	case '\0': return eos;
-	case '\t': return tap;
-	case ' ' : return blank;
-	case '.' : return comma;
-	case 'x' : return fun_x;
-	default: return num;
+		case 'p': return pi;
+		case 'e': return e;
+		case '(': return lparen;
+		case ')': return rparen;
+		case '+': return plus;
+		case '-': return minus;
+		case '*': return times;
+		case '/': return divide;
+		case '%': return mod;
+		case '^': return _pow;
+		case 'R': return _sqrt;
+		case '!': return _fac;
+		case 's': return _sin;
+		case 'c': return _cos;
+		case 't': return _tan;
+		case 'S': return _sec;
+		case 'C': return _csc;
+		case 'T': return _cot;
+		case 'l': return _log;
+		case 'L': return _ln;
+		case 'a': return _abs;
+		case 'm': return _rand;
+		case 'r': return rad;
+		case 'd': return deg;
+		case '\0': return eos;
+		case '\t': return tap;
+		case ' ' : return blank;
+		case '.' : return comma;
+		case 'x' : return fun_x;
+		default : return num;
 	}
 }
 
-number rad2deg_(number num1) {
+number rad2deg_(number num1) 
+{
 	number n;
+
 	if(num1.num_flag == 0){
 		n.t.f = num1.t.i * 180. / PI;
 	}else{
@@ -127,8 +129,10 @@ number rad2deg_(number num1) {
     return n;
 }
 
-number deg2rad_(number num1) {
+number deg2rad_(number num1) 
+{
 	number n;
+
 	if(num1.num_flag == 0){
 		n.t.f = num1.t.i * PI / 180.;
 	}else{
@@ -165,10 +169,12 @@ number tan_(number degree)
 
 	n = deg2rad_(degree);
 	res.num_flag = 1;
-	if(cos(n.t.f) == 0){
-		
+	if(cos(n.t.f) == 0){		// 0 으로 나눈 경우 
+		EVAL_ERR = 1; 
+		res.t.f = 0.0;
+	}else{
+		res.t.f = sin(n.t.f) / cos(n.t.f);
 	}
-	res.t.f = sin(n.t.f) / cos(n.t.f);
 	return res;
 }
 
@@ -178,7 +184,12 @@ number sec_(number degree)
 
 	n = deg2rad_(degree);
 	res.num_flag = 1;
-	res.t.f = 1 / sin(n.t.f);
+	if(sin(n.t.f) == 0){		// 0 으로 나눈 경우 
+		EVAL_ERR = 1; 
+		res.t.f = 0.0;
+	}else{
+		res.t.f = 1 / sin(n.t.f);
+	}
 	return res;
 }
 
@@ -188,7 +199,12 @@ number csc_(number degree)
 
 	n = deg2rad_(degree);
 	res.num_flag = 1;
-	res.t.f = 1 / cos(n.t.f);
+	if(cos(n.t.f) == 0){		// 0 으로 나눈 경우 
+		EVAL_ERR = 1; 
+		res.t.f = 0.0;
+	}else{
+		res.t.f = 1 / cos(n.t.f);
+	}
 	return res;
 }
 
@@ -198,8 +214,13 @@ number cot_(number degree)
 
 	n = deg2rad_(degree);
 	res.num_flag = 1;
-	res.t.f = 1 / (sin(n.t.f) / cos(n.t.f));
-
+	if( (cos(n.t.f) == 0 ) || (sin(n.t.f) / cos(n.t.f)) ){			// 0 으로 나눈 경우 
+		EVAL_ERR = 1;		
+		res.t.f = 0.0;
+	}else{
+		res.t.f = 1 / (sin(n.t.f) / cos(n.t.f));
+	}
+	
 	return res;
 }
 
@@ -746,10 +767,14 @@ void eval(char* str,number n)
 				if( get_token(&str[i-1]) == minus || get_token(&str[i-1]) == lparen || i==0 || get_token(&str[i-1]) == mod 
 							|| get_token(&str[i-1]) == times || get_token(&str[i-1]) == divide){
 					temp[j++] = str[i];
+					temp[j++] = '1';
+					num_to_stack(temp,&j);
+					push_op(&topOp,times);
 					i++; 
 					continue;
 				}
 			}
+			
 			num_to_stack(temp,&j);
 			if(topOp == -1){							// 스택에 연산자가 아무것도 없는 경우 
 				push_op(&topOp,get_token(&str[i])); 
@@ -770,7 +795,6 @@ void eval(char* str,number n)
 		}
 		i++;
 	}
-
 }
 
 int main(void)
