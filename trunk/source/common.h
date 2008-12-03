@@ -2,13 +2,14 @@
 #define __COMMON_H__
 
 #include <PA9.h>
+#include "main.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int eval1(const char*);
-int eval2(const char*, int x);
+Num eval1(const char*);
+Num eval2(const char*, Num x);
 
 //void plot(const char*, float, float);
 

@@ -21,6 +21,14 @@ extern "C" {
 #define MAXCOL 32
 #define MAXROW 24
 
+typedef struct number {
+    uint8 type;   // 0: int 1: float
+    union value {
+        int i;
+        float f;
+    } v;
+} Num;
+
 uint8 pushed_stylus, pushed_trig, pushed_left, pushed_right, pushed_up, pushed_down;
 uint8 stylus_page;    // now page
 int pushX, pushY;
@@ -28,7 +36,8 @@ int cursorX, cursorY;
 int printStrPos, exprPos;
 int count_x;
 int overview_expr;
-int minPos, maxOrder;
+int minPos, maxOrder, result_print;
+Num var_x;
 char exprs[10][340];
 uint8 order[10];
 
@@ -68,6 +77,7 @@ void clearButton();
 void pushButton();
 void changeLabel(int);
 void printExpr();
+void printResult(Num);
 void moveCursor(int);
 void overviewExpr();
 void overviewNextExpr();
