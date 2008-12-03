@@ -1,17 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
-/*
-case SIN : push_eval( sin( RD(value_frist)) ); 
-break; 
-case COS : push_eval( cos( RD(value_frist)) ); 
-break; 
-case TAN : push_eval( tan( RD(value_frist)) ); 
-*/
+#include <string.h>
+
+#include <math.h>
+//#include "common.h"
+
 #define MAX 100
+#define PI 3.1415926535897931
+#define E 2.718281828
 
 typedef enum {
-	blank,tap,rparen,comma,num,eos,plus,minus,times,divide,mod,pow,abs1,sqrt,fac,
-	sin,cos,tan,sec,csc,cot,log,ln,fun_x,lparen
+	blank,tap,rparen,comma,num,eos,plus,minus,times,divide,mod,_pow,e,pi,fun_x,
+		_abs,_sqrt,_fac,_sin,_cos,_tan,_sec,_csc,_cot,_log,_ln,_rand,rad,deg,lparen
 } priority;
 
 typedef struct number{
@@ -21,15 +21,12 @@ typedef struct number{
 		float f;
 	}t;
 }number;
-static number stack[MAX];
-//static number *num1, *num2, *result;
 
-// 숫자 스택
-
-// 연산자 스택
-int oper[MAX];
+static number stack[MAX];		// 숫자 스택
+int oper[MAX];					// 연산자 스택
 
 static int topStk = -1, topOp = -1; // 스택 포인터
+static int EVAL_ERR = 0;			// 1이면 연산 에러   
 
 void eval(char* str,number n);
 void operation1();
@@ -86,6 +83,8 @@ priority pop_op(int *top)
 priority get_token(char* symbol)
 {
 	switch( *symbol) {
+	case 'p': return pi;
+	case 'e': return e;
 	case '(': return lparen;
 	case ')': return rparen;
 	case '+': return plus;
@@ -93,18 +92,21 @@ priority get_token(char* symbol)
 	case '*': return times;
 	case '/': return divide;
 	case '%': return mod;
-	case '^': return pow;
-	case 'R': return sqrt;
-	case '!': return fac;
-	case 's': return sin;
-	case 'c': return cos;
-	case 't': return tan;
-	case 'S': return sec;
-	case 'C': return csc;
-	case 'T': return cot;
-	case 'l': return log;
-	case 'L': return ln;
-	case 'a': return abs1;
+	case '^': return _pow;
+	case 'R': return _sqrt;
+	case '!': return _fac;
+	case 's': return _sin;
+	case 'c': return _cos;
+	case 't': return _tan;
+	case 'S': return _sec;
+	case 'C': return _csc;
+	case 'T': return _cot;
+	case 'l': return _log;
+	case 'L': return _ln;
+	case 'a': return _abs;
+	case 'm': return _rand;
+	case 'r': return rad;
+	case 'd': return deg;
 	case '\0': return eos;
 	case '\t': return tap;
 	case ' ' : return blank;
@@ -114,52 +116,118 @@ priority get_token(char* symbol)
 	}
 }
 
+number rad2deg_(number num1) {
+	number n;
+	if(num1.num_flag == 0){
+		n.t.f = num1.t.i * 180. / PI;
+	}else{
+		n.t.f = num1.t.f * 180. / PI;
+	}
+	n.num_flag = 1;
+    return n;
+}
+
+number deg2rad_(number num1) {
+	number n;
+	if(num1.num_flag == 0){
+		n.t.f = num1.t.i * PI / 180.;
+	}else{
+		n.t.f = num1.t.f * PI / 180.;
+	}
+	n.num_flag = 1;
+    return n;
+}
+
+
 number sin_(number degree)
 {
-	//TODO :
-	return;
+	number n, res;
+	
+	n = deg2rad_(degree);
+	res.num_flag = 1;
+	res.t.f = sin(n.t.f);
+	return res;
 }
 
 number cos_(number degree)
 {
-	//TODO :
-	return;
+	number n, res;
+
+	n = deg2rad_(degree);
+	res.num_flag = 1;
+	res.t.f = cos(n.t.f);
+	return res;
 }
 
 number tan_(number degree)
 {
-	//TODO :
-	return;
+	number n, res;
+
+	n = deg2rad_(degree);
+	res.num_flag = 1;
+	if(cos(n.t.f) == 0){
+		
+	}
+	res.t.f = sin(n.t.f) / cos(n.t.f);
+	return res;
 }
 
 number sec_(number degree)
 {
-	//TODO :
-	return;
+	number n, res;
+
+	n = deg2rad_(degree);
+	res.num_flag = 1;
+	res.t.f = 1 / sin(n.t.f);
+	return res;
 }
 
 number csc_(number degree)
 {
-	//TODO :
-	return;
+	number n, res;
+
+	n = deg2rad_(degree);
+	res.num_flag = 1;
+	res.t.f = 1 / cos(n.t.f);
+	return res;
 }
 
 number cot_(number degree)
 {
-	//TODO :
-	return;
+	number n, res;
+
+	n = deg2rad_(degree);
+	res.num_flag = 1;
+	res.t.f = 1 / (sin(n.t.f) / cos(n.t.f));
+
+	return res;
 }
 
-number log_(number degree)
+number log_(number num1)
 {
-	//TODO :
-	return;
+	number res;
+
+	if(num1.num_flag==0){
+		res.t.f = log(num1.t.i) / log(10);
+	}else{
+		res.t.f = log(num1.t.f) / log(10);
+	}
+	res.num_flag = 1;
+	
+	return res;
 }
 
-number ln_(number degree)
+number ln_(number num1)
 {
-	//TODO :
-	return;
+	number res;
+	if(num1.num_flag==0){
+		res.t.f = log(num1.t.i);
+	}else{
+		res.t.f = log(num1.t.f);
+	}
+	res.num_flag = 1;
+
+	return res;
 }
 
 
@@ -176,7 +244,8 @@ number fac_(number num1)
 		res.num_flag = 0;
 		if(num1.t.i < 0 ){			// num1이 음수 일때 
 			res.t.i = 0;
-			printf("이 함수의 올바른 입력이 아닙니다(FAC).\n");		
+			EVAL_ERR = 0;
+			//printf("이 함수의 올바른 입력이 아닙니다(FAC).\n");		
 			return res;
 		}
 		res.t.i = 1;
@@ -200,7 +269,8 @@ number sqrt_(number num1)
 
 		if(num1.t.i < 0 ){
 			res.t.i = 0;
-			printf("이 함수의 올바른 입력이 아닙니다.(SQRT)\n");
+			EVAL_ERR = 0;
+			//printf("이 함수의 올바른 입력이 아닙니다.(SQRT)\n");
 			return res;
 		}
 
@@ -245,6 +315,18 @@ number abs_(number num1)
 	}
 
 	return res;
+}
+
+
+number rand_(number num1)
+{
+	number n = num1;
+	if(num1.num_flag == 0){
+		n.t.i -= 1; 
+	}else{
+		n.t.f -= 1; 
+	}
+	return n;
 }
 
 number pow_(number num1, number num2)
@@ -372,7 +454,8 @@ number divi_(number num1,number num2)
 	if (num2.t.f == 0 && num2.t.i == 0){
 		res.num_flag = 0;
 		res.t.i = 0;
-		printf("0으로 나눌수 없습니다\n");	// 에러 처리가 필요함 
+		EVAL_ERR = 0;
+		//printf("0으로 나눌수 없습니다\n");	
 		return res;
 	}else{
 		switch (state){
@@ -446,12 +529,34 @@ void operation1()	// 스택에서 pop한 후 연산하고 결과를 push (피연산자가 1개인 연
 	num1 = stack[topStk--];
 	
 	switch(token) {
-		case sqrt:
-			res = sqrt_(num1); break;
-		case fac:	
-			res = fac_(num1); break;
-		case abs1:
+		case _abs:
 			res = abs_(num1); break;
+		case _rand:
+			res = rand_(num1); break;
+		case _fac:	
+			res = fac_(num1); break;
+		case _sqrt:
+			res = sqrt_(num1); break;
+		case rad:
+			res = deg2rad_(num1); break;
+		case deg:
+			res = rad2deg_(num1); break;
+		case _sin:
+			res = sin_(num1); break;
+		case _cos:
+			res = cos_(num1); break;
+		case _tan:
+			res = tan_(num1); break;
+		case _sec:
+			res = sec_(num1); break;
+		case _csc:
+			res = csc_(num1); break;
+		case _cot:
+			res = cot_(num1); break;
+		case _log:
+			res = log_(num1); break;
+		case _ln:
+			res = ln_(num1); break;
 		default : 
 			break;
 	}
@@ -477,7 +582,7 @@ void operation2()	// 스택에서 pop한 후 연산하고 결과를 push (피연산자가 2개인 연
 			res = mul_(num1,num2); break;	
 		case divide:
 			res = divi_(num1,num2); break;			
-		case pow:		
+		case _pow:		
 			res = pow_(num1,num2); break;
 		case mod:
 			res = modul_(num1,num2); break;
@@ -536,43 +641,19 @@ void plot(char* str,int start, int end)		// f(x) 함수에서 [start,end]범위의 그래
 
 void eval(char* str,number n)
 {
-	char temp[MAX]="\0"; // 임시 저장 공간
-	int i = 0, j = 0; // string 포인터
-	int token;	// 현재 토큰의 종류 
-	int flag = 0;	//  스택에 존재하는 '('의 갯수  
-	
-	number fx = n;	//  f(x)함수의 x 값을 저장 
+	char temp[MAX] = "\0";	// 임시 저장 공간
+	int i = 0, j = 0;		// string 포인터
+	int token;				// 현재 토큰의 종류 
+	int flag = 0;			//  스택에 존재하는 '('의 갯수  
+	number fx = n;			//  f(x)함수의 x 값을 저장 
+	number const_num;
 
 	while(token != eos){
 		token = get_token(&str[i]);
 		switch(token){
-		case blank :	// ' '
+		case blank :			// ' '
 			break;
-		case tap :		// '\t'
-			break;
-		case sin :
-			//TODO:	
-			break;
-		case cos :
-			//TODO
-			break;
-		case tan :
-			//TODO
-			break;
-		case sec :
-			//TODO
-			break;
-		case csc :
-			//TODO
-			break;
-		case cot :
-			//TODO
-			break;
-		case log :
-			//TODO
-			break;
-		case ln :
-			//TODO
+		case tap :				// '\t'
 			break;
 		case fun_x :			// 미지수 x 
 			if (i != 0 && get_token(&str[i-1]) == num){
@@ -584,12 +665,48 @@ void eval(char* str,number n)
 				if( temp[j-1] != '-'){
 					push(&topStk,fx);
 				}else{
-					if(n.num_flag=0){
+					if(n.num_flag == 0){
 						fx.t.i *= -1;
 					}else{
 						fx.t.f *= -1;
 					}
 					push(&topStk,fx);
+				}
+			}
+			break;
+		case e :				// 상수 E
+			const_num.num_flag = 1;
+			const_num.t.f = (float)E;
+
+			if (i != 0 && get_token(&str[i-1]) == num){
+				num_to_stack(temp,&j);
+				push_op(&topOp,times);
+				push(&topStk,const_num);
+				operation2();
+			}else{
+				if( temp[j-1] != '-'){
+					push(&topStk,const_num);
+				}else{
+					const_num.t.f *= -1;
+					push(&topStk,const_num);
+				}
+			}
+			break;
+		case pi :				// 상수 PI
+			const_num.num_flag = 1;
+			const_num.t.f = (float)PI;
+
+			if (i != 0 && get_token(&str[i-1]) == num){
+				num_to_stack(temp,&j);
+				push_op(&topOp,times);
+				push(&topStk,const_num);
+				operation2();
+			}else{
+				if( temp[j-1] != '-'){
+					push(&topStk,const_num);
+				}else{
+					const_num.t.f *= -1;
+					push(&topStk,const_num);
 				}
 			}
 			break;
@@ -601,10 +718,10 @@ void eval(char* str,number n)
 		case eos :				// 입력의 끝 '\0'
 			num_to_stack(temp,&j);
 			while(topOp != -1 ){
-				if ((oper[topOp]) != fac && (oper[topOp] != sqrt) && (oper[topOp] != abs1)){
-					operation2();
-				}else{
+				if(oper[topOp] > 11 && oper[topOp] < 27 ){
 					operation1();
+				}else{
+					operation2();
 				}
 			}
 			break;
@@ -615,7 +732,7 @@ void eval(char* str,number n)
 		case rparen :			// ')'
 			num_to_stack(temp,&j);
 			while(oper[topOp] != lparen){  
-				if(oper[topOp]==sqrt || oper[topOp]==fac ||oper[topOp]==sqrt||oper[topOp]==abs1){
+				if(oper[topOp] > 11 && oper[topOp] < 27 ){
 					operation1();
 				}else{
 					operation2();
@@ -640,10 +757,10 @@ void eval(char* str,number n)
 				push_op(&topOp,get_token(&str[i])); 
 			}else if(topOp > -1 ){		 
 				if(oper[topOp] >= get_token(&str[i])){
-					if ((oper[topOp]) != fac && (oper[topOp] != sqrt)){
-						operation2(); i--;
-					}else{
+					if(oper[topOp] > 11 && oper[topOp] < 27 ){
 						operation1(); i--;
+					}else{
+						operation2(); i--;
 					}
 				}else{
 					push_op(&topOp,get_token(&str[i]));
@@ -686,7 +803,6 @@ int main(void)
 	}
 
 	eval(str,n);
-
 	result = stack[topStk];
 
 	if(result.num_flag == 0)
