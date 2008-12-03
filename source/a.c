@@ -29,13 +29,9 @@ static number stack[MAX];
 // 연산자 스택
 int oper[MAX];
 
-// 수식 스택
-//char exp[MAX];
+static int topStk = -1, topOp = -1; // 스택 포인터
 
-static int p_top = -1, topStk = -1, topOp = -1; // 스택 포인터
-static int float_flag=0;	// 0이면 정수 1이면 실수 
-
-void postfix(char* str,int x);
+void eval(char* str,number n);
 void operation1();
 void operation2();
 priority get_token(char* symbol);
@@ -48,7 +44,7 @@ void push(int *top, number item)
 		return;
 	}
 	
-	if(float_flag == 0){
+	if(item.num_flag == 0){
 		stack[++(*top)].t.i = item.t.i;
 		stack[(*top)].num_flag = item.num_flag;
 	}else{
@@ -237,14 +233,14 @@ number abs_(number num1)
 		if(num1.t.f > 0 ){
 			res.t.f = num1.t.f;
 		}else{
-			//res.t.f = abs(num1.t.f);		// abc함수 호출
+			res.t.f = -1 * num1.t.f;		
 		}
 	}else{
 		res.num_flag = 0;
 		if(num1.t.i > 0 ){
 			res.t.i = num1.t.i;
 		}else{
-			//res.t.i = abs(num1.t.i);		// abc함수 호출 
+			res.t.i = -1 * num1.t.i;		 
 		}
 	}
 
@@ -368,12 +364,12 @@ number divi_(number num1,number num2)
 	number res;
 	
 	state = (num1.num_flag * 2 ) + (num2.num_flag);
-	if (state >0 )
+	if (state >0 ){
 		res.num_flag = 1;
-	else
+	}else{
 		res.num_flag = 0;
-	
-	if (num2.t.f == 0 || num2.t.i == 0){
+	}
+	if (num2.t.f == 0 && num2.t.i == 0){
 		res.num_flag = 0;
 		res.t.i = 0;
 		printf("0으로 나눌수 없습니다\n");	// 에러 처리가 필요함 
@@ -494,23 +490,26 @@ void operation2()	// 스택에서 pop한 후 연산하고 결과를 push (피연산자가 2개인 연
 void num_to_stack(char* temp,int *j)	// temp의 숫자 스트링을 스택에 푸쉬
 {
 		number n;
-
+		
 		temp[*j]='\0';
+		if(strchr(temp,'.') !=NULL){
+			n.num_flag = 1;
+		}else{
+			n.num_flag = 0;
+		}
 		if(temp[0]!='\0'){
-			switch(float_flag){
+			switch(n.num_flag){
 				case 0:
-					n.num_flag = 0;
 					n.t.i = atoi(temp);
 					break;
 				case 1:
-					n.num_flag = 1;
 					n.t.f =(float)atof(temp);
 					break;
 				default:
 					break;
 			}
 			push(&topStk,n);
-			temp[0]='\0'; *j=0; float_flag=0;
+			temp[0]='\0'; *j=0; 
 		}
 }
 
@@ -518,9 +517,13 @@ void plot(char* str,int start, int end)		// f(x) 함수에서 [start,end]범위의 그래
 {
 	int i; 
 	number *result;
+	number n;
+
 	printf("%d %d \n",start,end);
 	for(i=start; i <= end ; i++){
-		postfix(str,i);
+		n.num_flag = 0;
+		n.t.i = i;
+		eval(str,n);
 		result = &stack[topStk];
 		if(result->num_flag == 0)
 			printf("i=%d,  result=%d\n",i,result->t.i);
@@ -531,16 +534,14 @@ void plot(char* str,int start, int end)		// f(x) 함수에서 [start,end]범위의 그래
 	}
 }
 
-void postfix(char* str,int x)
+void eval(char* str,number n)
 {
 	char temp[MAX]="\0"; // 임시 저장 공간
 	int i = 0, j = 0; // string 포인터
 	int token;	// 현재 토큰의 종류 
 	int flag = 0;	//  스택에 존재하는 '('의 갯수  
 	
-	number fx;	// f(x)에서 x의 값을 받을 변수 (임시로 했음)
-	fx.t.i= 5;	
-	fx.num_flag = 0;
+	number fx = n;	//  f(x)함수의 x 값을 저장 
 
 	while(token != eos){
 		token = get_token(&str[i]);
@@ -573,27 +574,34 @@ void postfix(char* str,int x)
 		case ln :
 			//TODO
 			break;
-		case fun_x :	
+		case fun_x :			// 미지수 x 
 			if (i != 0 && get_token(&str[i-1]) == num){
 				num_to_stack(temp,&j);
 				push_op(&topOp,times);
 				push(&topStk,fx);
 				operation2();
 			}else{
-				temp[j++] = '5';	// 임시로 x값 5를 받음... 
-				num_to_stack(temp,&j);
+				if( temp[j-1] != '-'){
+					push(&topStk,fx);
+				}else{
+					if(n.num_flag=0){
+						fx.t.i *= -1;
+					}else{
+						fx.t.f *= -1;
+					}
+					push(&topStk,fx);
+				}
 			}
 			break;
 		case comma :			// 소숫점 '.'
 			temp[j++] = str[i]; 
-			float_flag = 1;		
 			break;
 		case num :				// 숫자 
 			temp[j++] = str[i]; break;
 		case eos :				// 입력의 끝 '\0'
 			num_to_stack(temp,&j);
 			while(topOp != -1 ){
-				if ((oper[topOp]) != fac && (oper[topOp] != sqrt)){
+				if ((oper[topOp]) != fac && (oper[topOp] != sqrt) && (oper[topOp] != abs1)){
 					operation2();
 				}else{
 					operation1();
@@ -618,23 +626,24 @@ void postfix(char* str,int x)
 			break;
 		default :				// 연산자인 경우
 			if( get_token(&str[i]) == minus ){ 				
-				if( get_token(&str[i-1]) == minus || get_token(&str[i-1]) == lparen || i==0 || get_token(&str[i-1]) == mod){
+				if( get_token(&str[i-1]) == minus || get_token(&str[i-1]) == lparen || i==0 || get_token(&str[i-1]) == mod 
+							|| get_token(&str[i-1]) == times || get_token(&str[i-1]) == divide){
 					temp[j++] = str[i];
 					i++; 
 					continue;
 				}
 			}
 			num_to_stack(temp,&j);
-			if(topOp == -1){	// 스택에 연산자가 아무것도 없는 경우 
+			if(topOp == -1){							// 스택에 연산자가 아무것도 없는 경우 
 				push_op(&topOp,get_token(&str[i])); 
-			}else if ( oper[topOp] == lparen ){	// 스택에 가장 최근에 들어온 연산자가 '('경우  
+			}else if ( oper[topOp] == lparen ){			// 스택에 가장 최근에 들어온 연산자가 '('경우  
 				push_op(&topOp,get_token(&str[i])); 
 			}else if(topOp > -1 ){		 
 				if(oper[topOp] >= get_token(&str[i])){
 					if ((oper[topOp]) != fac && (oper[topOp] != sqrt)){
 						operation2(); i--;
 					}else{
-						operation1();
+						operation1(); i--;
 					}
 				}else{
 					push_op(&topOp,get_token(&str[i]));
@@ -644,25 +653,46 @@ void postfix(char* str,int x)
 		}
 		i++;
 	}
-	float_flag = 0;
+
 }
 
 int main(void)
 {
 	char str[MAX];
+	char x[MAX];
 	number result;
+	number n;
+
 	fflush(stdin);
 	printf("input  : ");
 	gets(str);
 	
 	//plot(str,1,5);	// f(x) 함수에서 [1,5]범위의 그래프 그리기 
-	postfix(str,0);
-	printf("\n\npostfix end\n\n");
 	
+	
+	if(strchr(str,'x') != NULL){		// 입력식에 x가 존재 할 때 
+		printf("x값을 입력 하시오 => ");
+		gets(x);						// x값을 입력을 받는다 
+		if (strchr(x,'.') !=NULL){		// x값이 실수 
+			n.num_flag = 1;
+			n.t.f = (float)atof(x);
+		}else{							// x값이 정수  
+			n.num_flag = 0;
+			n.t.i = atoi(x);
+		}
+	}else{								// 입력식에 x가 존재하지 않을 때 
+		n.num_flag = 0;
+		n.t.i = 0;
+	}
+
+	eval(str,n);
+
 	result = stack[topStk];
+
 	if(result.num_flag == 0)
 		printf("result is %d \n",result.t.i);
 	else 
 		printf("result is %f \n",result.t.f);
+
 	return 0;
 }
