@@ -440,8 +440,9 @@ void changeLabel(int page) {
 }
 
 void printExpr() {
-    PA_ClearTextBg(UP_LCD);
+//    PA_ClearTextBg(UP_LCD);
     PA_BoxTextNoWrap(UP_LCD, 1, 1, 30, 10, p_expr, 340);
+    PA_OutputText(UP_LCD, 1, 15, expr);
     overviewExpr();
     if (result_print == 1) printResult(result);
     else if (result_print == 2 && inputed_x) {
@@ -491,7 +492,8 @@ void hiddenStripe() {
 void printGraph() {
     float step = var_x[1].t.i - var_x[0].t.i / 100.;
     float r[100];
-    int i, max = 0, min = 0;
+    int i;
+    float max = 0, min = 0;
     Num n, re;
 
     hiddenStripe();
@@ -511,9 +513,9 @@ void printGraph() {
         if (r[i] < min) min = r[i];
         if (r[i] > max) max = r[i];
     }
-    PA_Print(UP_LCD, "%d %d", max, min);
+//    PA_Print(UP_LCD, "%d %d", max, min);
     for (i = 0; i < 100; i++) {
-//        PA_Print(UP_LCD, "%d\n", 192-(int)(192*r[i]/(max-min)));
+        PA_Print(UP_LCD, "%d\n", 192-(int)(192*r[i]/(max-min)));
         PA_Put8bitPixel(DOWN_LCD, 2*i+30, 192-(int)(192*r[i]/(max-min)), 1);  
     }
     

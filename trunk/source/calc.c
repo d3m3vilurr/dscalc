@@ -46,11 +46,13 @@ int randInt(int max) {
     return PA_RandMax(max);
 }*/
 
+#include <stdlib.h>
+#include <math.h>
 #include "common.h"
 
 #define MAX 100
-#define PI 3.1415926535897931
-#define E 2.718281828
+//#define PI 3.141592f
+//#define E  2.718281f
 
 typedef enum {
         blank,tap,rparen,comma,num,eos,plus,minus,times,divide,mod,_pow,e,pi,fun_x,
@@ -66,13 +68,13 @@ static int EVAL_ERR = 0;                        // 1ÀÌ¸é ¿¬»ê ¿¡·¯
 void eval(char* str,number n);
 void operation1();
 void operation2();
-priority get_token(char* symbol);
+priority get_token(char symbol);
 
 // ½ºÅÃ
 void push(int *top, number item)
 {
         if(*top >= MAX-1) {
-                printf("Stack is full!!\n");
+//                printf("Stack is full!!\n");
                 return;
         }
        
@@ -88,8 +90,8 @@ void push(int *top, number item)
 number pop(int *top)
 {
         if( (*top) == -1) {
-                printf("Stack is empty\n");
-                exit(0);
+//                printf("Stack is empty\n");
+//                exit(0);
         }
 
         return stack[(*top)--];
@@ -98,8 +100,8 @@ number pop(int *top)
 void push_op(int *top, priority item)
 {
         if(*top >= MAX-1) {
-                printf("Operation Stack is full!!\n");
-                return;
+//                printf("Operation Stack is full!!\n");
+//                return;
         }
 
         oper[++(*top)] = item;
@@ -115,9 +117,9 @@ priority pop_op(int *top)
         return oper[(*top)--];
 }
 
-priority get_token(char* symbol)
+priority get_token(char symbol)
 {
-        switch( *symbol) {
+        switch(symbol) {
                 case 'p': return pi;
                 case 'e': return e;
                 case '(': return lparen;
@@ -374,14 +376,20 @@ number abs_(number num1)
 }
 
 
-number rand_(number num1)
+number rand_(number n)
 {
-        number n = num1;
+/*        number n = num1;
         if(num1.num_flag == 0){
                 n.t.i -= 1;
         }else{
                 n.t.f -= 1;
-        }
+        } */
+        if (n.num_flag == 0) 
+            n.t.i = PA_RandMax(n.t.i);
+        else
+            n.t.i = PA_RandMax((int)n.t.f);
+            
+        n.num_flag = 0;
         return n;
 }
 
@@ -389,7 +397,7 @@ number pow_(number num1, number num2)
 {
         number res;
         int state;//i, op, n;
-
+        res.num_flag = 1;
         state = (num1.num_flag * 2 ) + (num2.num_flag);
        
         switch (state){
@@ -716,20 +724,20 @@ void eval(char* str,number n)
 {
         char temp[MAX] = "\0";  // ÀÓ½Ã ÀúÀå °ø°£
         int i = 0, j = 0;               // string Æ÷ÀÎÅÍ
-        int token;                              // ÇöÀç ÅäÅ«ÀÇ Á¾·ù
+        int token  = -1;                              // ÇöÀç ÅäÅ«ÀÇ Á¾·ù
         int flag = 0;                   //  ½ºÅÃ¿¡ Á¸ÀçÇÏ´Â '('ÀÇ °¹¼ö  
         number fx = n;                  //  f(x)ÇÔ¼öÀÇ x °ªÀ» ÀúÀå
         number const_num;
 
-        while(token != eos){
-                token = get_token(&str[i]);
+        do {
+                token = get_token(str[i]);
                 switch(token){
                 case blank :                    // ' '
                         break;
                 case tap :                              // '\t'
                         break;
                 case fun_x :                    // ¹ÌÁö¼ö x
-                        if (i != 0 && get_token(&str[i-1]) == num){
+                        if (i != 0 && get_token(str[i-1]) == num){
                                 num_to_stack(temp,&j);
                                 push_op(&topOp,times);
                                 push(&topStk,fx);
@@ -751,7 +759,7 @@ void eval(char* str,number n)
                         const_num.num_flag = 1;
                         const_num.t.f = (float)E;
 
-                        if (i != 0 && get_token(&str[i-1]) == num){
+                        if (i != 0 && get_token(str[i-1]) == num){
                                 num_to_stack(temp,&j);
                                 push_op(&topOp,times);
                                 push(&topStk,const_num);
@@ -768,8 +776,7 @@ void eval(char* str,number n)
                 case pi :                               // »ó¼ö PI
                         const_num.num_flag = 1;
                         const_num.t.f = (float)PI;
-
-                        if (i != 0 && get_token(&str[i-1]) == num){
+                        if (i != 0 && get_token(str[i-1]) == num){
                                 num_to_stack(temp,&j);
                                 push_op(&topOp,times);
                                 push(&topStk,const_num);
@@ -800,7 +807,7 @@ void eval(char* str,number n)
                         break;
                 case lparen :                   // '('
                         flag++;
-                        push_op(&topOp,get_token(&str[i]));
+                        push_op(&topOp,get_token(str[i]));
                         break;
                 case rparen :                   // ')'
                         num_to_stack(temp,&j);
@@ -815,9 +822,9 @@ void eval(char* str,number n)
                         flag--;
                         break;
                 default :                               // ¿¬»êÀÚÀÎ °æ¿ì
-                        if( get_token(&str[i]) == minus ){                              
-                                if( get_token(&str[i-1]) == minus || get_token(&str[i-1]) == lparen || i==0 || get_token(&str[i-1]) == mod
-                                                        || get_token(&str[i-1]) == times || get_token(&str[i-1]) == divide || get_token(&str[i-1]) == _pow ){
+                        if( get_token(str[i]) == minus ){                              
+                                if( get_token(str[i-1]) == minus || get_token(str[i-1]) == lparen || i==0 || get_token(str[i-1]) == mod
+                                                        || get_token(str[i-1]) == times || get_token(str[i-1]) == divide || get_token(str[i-1]) == _pow ){
                                         temp[j++] = str[i];
                                         temp[j++] = '1';
                                         num_to_stack(temp,&j);
@@ -829,31 +836,33 @@ void eval(char* str,number n)
                        
                         num_to_stack(temp,&j);
                         if(topOp == -1){                                                        // ½ºÅÃ¿¡ ¿¬»êÀÚ°¡ ¾Æ¹«°Íµµ ¾ø´Â °æ¿ì
-                                push_op(&topOp,get_token(&str[i]));
+                                push_op(&topOp,get_token(str[i]));
                         }else if ( oper[topOp] == lparen ){                     // ½ºÅÃ¿¡ °¡Àå ÃÖ±Ù¿¡ µé¾î¿Â ¿¬»êÀÚ°¡ '('°æ¿ì  
-                                push_op(&topOp,get_token(&str[i]));
+                                push_op(&topOp,get_token(str[i]));
                         }else if(topOp > -1 ){          
-                                if(oper[topOp] >= get_token(&str[i])){
+                                if(oper[topOp] >= get_token(str[i])){
                                         if(oper[topOp] > 11 && oper[topOp] < 27 ){
                                                 operation1(); i--;
                                         }else{
                                                 operation2(); i--;
                                         }
                                 }else{
-                                        push_op(&topOp,get_token(&str[i]));
+                                        push_op(&topOp,get_token(str[i]));
                                 }
                         }
                         break;
                 }
                 i++;
-        }
+        } while(token != eos);
 }
 
 number eval1(char *expr) {
     number n;
-    n.num_flag = 0;
-    n.t.i = 0;
+    n.num_flag = 1;
+    n.t.i = 0.0;
     eval(expr, n);
+                                                                                                PA_Print(UP_LCD, "%d",topStk);
+
     return stack[topStk];
 }
 number eval2(char *expr, number n) {
