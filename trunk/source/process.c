@@ -72,8 +72,9 @@ void runAction() {
         return;
     }
     
-    if (buf[0] == 'E') {
-    } else if (buf[0] == 'B') {
+    if (buf[0] == 'E') { // enter
+    
+    } else if (buf[0] == 'B') { // backspace
         if (checkValue(expr[exprPos-1]) == FUNCTION) {
             int len = strlen(buf);
             removeString(p_expr, printStrPos-len, len+1, 340);
@@ -81,14 +82,20 @@ void runAction() {
             removeString(p_expr, printStrPos-1, 2, 340);
         }
         moveCursor(-1);
-    } else if (buf[0] == 'D') {
+    } else if (buf[0] == 'D') { // delete
         if (checkValue(expr[exprPos+1]) == FUNCTION) {
             int len = strlen(buf);
             removeString(p_expr, printStrPos, len+1, 340);
         } else {
             removeString(p_expr, printStrPos, 2, 340);
         }
-    } else if (buf[0] == 'C') {
+    } else if (buf[0] == 'C') { // clear
+        memset(expr, '\0', 200);
+        memset(p_expr, '\0', 340);
+        exprPos = 0;
+        printStrPos = 0;
+        moveCursor(0);
+        return;
     }
     
     /* remove action char */
