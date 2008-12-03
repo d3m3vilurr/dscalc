@@ -5,6 +5,7 @@
 #include "gfx/all_gfx.c"
 #include "gfx/all_gfx.h"
 #include "main.h"
+#include "common.h"
 
 void init() {
     PA_Init();
@@ -19,6 +20,7 @@ void init() {
     cursorX = 1; cursorY = 1; // default input pos
     printStrPos = 0; exprPos  = 0;
     count_x = 0;
+    result_print = 0;
     
     overview_expr = 0;
     
@@ -82,10 +84,10 @@ void runAction() {
         removeString(p_expr, printStrPos, 1, 340);
         expr_insert(p_expr);
         if (count_x <= 0) { // expression
-            int result = eval1(expr);
-            overview_expr = -1;
+//            printResult(eval1(expr));
+            result_print = 1;
         } else { // equation
-            
+            result_print = 2;
         }
     } else if (buf[0] == 'B') { // backspace
         int v = checkValue(expr[exprPos-1]);
@@ -377,11 +379,23 @@ void printExpr() {
     PA_ClearTextBg(UP_LCD);
     // DEBUG CODE
     //PA_OutputText(UP_LCD, 1, 20, expr);
-    double ln_10 = log(10)/log(2.7182818284590451);
-    PA_OutputText(UP_LCD, 2, 10, "%d.%d", (int)ln_10, (int)((ln_10-(int)ln_10)*100000000));
+    //double ln_10 = log(10)/log(2.7182818284590451);
+    //PA_OutputText(UP_LCD, 2, 10, "%d.%d", (int)ln_10, (int)((ln_10-(int)ln_10)*100000000));
     PA_BoxTextNoWrap(UP_LCD, 1, 1, 30, 10, p_expr, 340);
     overviewExpr();
+    if (result_print == 1) printResult(eval1(expr));
+    else if (result_print == 2) printResult(eval2(expr, var_x));
     
+}
+void printResult(Num n) {
+    char result[100];
+    if (n.type) { // float
+        snprintf(result, 100, "  = %d.%d", (int)n.v.f, (int)((n.v.f - (int)n.v.f)*1000000000));
+    } else { // int
+        snprintf(result, 100, "  = %d", n.v.i);
+    }
+    
+    PA_BoxTextNoWrap(UP_LCD, 1, 12, 30, 14, result, 100);
 }
 
 void overviewExpr() {

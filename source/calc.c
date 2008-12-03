@@ -2,11 +2,19 @@
 //#define pi() 3.1415926535897931
 //#define e() 2.7182818284590451
 
-int eval1(const char *expr) {
-    return 0; //stub
+Num eval1(const char *expr) {
+    //return 0; //stub
+    Num n;
+    n.type = 1;
+    n.v.f = 10.101010101;
+    return n;
 }
-int eval2(const char *expr, int x) {
-    return 0;
+Num eval2(const char *expr, Num x) {
+    Num n;
+    n.type = 1;
+    n.v.f = 10.101010101;
+    return n;
+    //return 0;
 }
 
 
