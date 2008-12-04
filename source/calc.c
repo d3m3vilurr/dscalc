@@ -63,7 +63,6 @@ static number stack[MAX];               // ¼ýÀÚ ½ºÅÃ
 int oper[MAX];                                  // ¿¬»êÀÚ ½ºÅÃ
 
 static int topStk = -1, topOp = -1; // ½ºÅÃ Æ÷ÀÎÅÍ
-static int EVAL_ERR = 0;                        // 1ÀÌ¸é ¿¬»ê ¿¡·¯  
 
 void eval(char* str,number n);
 void operation1();
@@ -303,7 +302,7 @@ number fac_(number num1)
                 res.num_flag = 0;
                 if(num1.t.i < 0 ){                      // num1ÀÌ À½¼ö ÀÏ¶§
                         res.t.i = 0;
-                        EVAL_ERR = 0;
+                        EVAL_ERR = 1;
                         //printf("ÀÌ ÇÔ¼öÀÇ ¿Ã¹Ù¸¥ ÀÔ·ÂÀÌ ¾Æ´Õ´Ï´Ù(FAC).\n");          
                         return res;
                 }
@@ -327,7 +326,7 @@ number sqrt_(number num1)
 
                 if(num1.t.i < 0 ){
                         res.t.i = 0;
-                        EVAL_ERR = 0;
+                        EVAL_ERR = 1;
                         //printf("ÀÌ ÇÔ¼öÀÇ ¿Ã¹Ù¸¥ ÀÔ·ÂÀÌ ¾Æ´Õ´Ï´Ù.(SQRT)\n");
                         return res;
                 }
@@ -531,10 +530,10 @@ number divi_(number num1,number num2)
         }else{
                 res.num_flag = 0;
         }
-        if (num2.t.f == 0 && num2.t.i == 0){
+        if (num2.t.f == 0 || num2.t.i == 0){
                 res.num_flag = 0;
                 res.t.i = 0;
-                EVAL_ERR = 0;
+                EVAL_ERR = 1;
                 //printf("0À¸·Î ³ª´­¼ö ¾ø½À´Ï´Ù\n");    
                 return res;
         }else{
@@ -860,8 +859,10 @@ number eval1(char *expr) {
     number n;
     n.num_flag = 1;
     n.t.i = 0.0;
+    int len = strlen(expr);
+    
+    if (expr[len - 1] == 'E') expr[len-1] = '\0';
     eval(expr, n);
-                                                                                                PA_Print(UP_LCD, "%d",topStk);
 
     return stack[topStk];
 }

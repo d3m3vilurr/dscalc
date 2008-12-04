@@ -15,11 +15,16 @@ extern "C" {
 #include "label1.c"
 #include "label2.c"
 
+// Background files : 
+#include "bg.c"
+PAGfx_struct bg = {(void*)bg_Map, 768, (void*)bg_Tiles, 12160, (void*)bg_Pal, (int*)bg_Info };
+
 // Palette files : 
 #include "bbg.pal.c"
 #include "cursor.pal.c"
 #include "label1.pal.c"
 #include "label2.pal.c"
+#include "bg.pal.c"
 
 
 #ifdef __cplusplus
