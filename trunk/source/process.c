@@ -1,6 +1,6 @@
 // Includes
 #include <PA9.h>
-
+#include <stdlib.h>
 // PAGfxConverter Include
 #include "gfx/all_gfx.c"
 #include "gfx/all_gfx.h"
@@ -94,6 +94,7 @@ uint8 actionStylus2(const uint8 type) {
         break;
     case GRAPHIC:
         on_graph = on_graph == 1 ? 0 : 1;
+        var = 0;
         break;
     default:
         break;
@@ -109,16 +110,29 @@ void runAction2() {
             result_print = 0;
             on_graph = 0;
             inputed_x = 0;
+            var = 0;
         } else {
-            var_x[0].num_flag = 0;
-            var_x[1].num_flag = 0;
-            var_x[0].t.i = 0;
-            var_x[1].t.i = 360;
-            inputed_x = 1;
+            Num n;
+            
+            n.num_flag = 1;
+            int l = strlen(inputValue);
+            if (inputValue[l-1] == 'E') inputValue[l-1] = '\0';
+            n.t.f = atof(inputValue);
+            
+            var_x[var] = n;
+            var++;
             if (on_graph) {
-                
+                if (var >= 2) {
+                    inputed_x = 1;
+                    inputPos = 0;
+                    memset(inputValue, '\0', 100);
+                    var = 0;
+                }
             } else {
-                result = eval2(expr, var_x[1]);
+                inputed_x = 1;
+                var = 0;
+                EVAL_ERR = 0;
+                result = eval2(expr, var_x[0]);
             }
 
         }
@@ -143,10 +157,14 @@ void runAction() {
         removeString(p_expr, printStrPos, 1, 340);
         expr_insert(p_expr);
         if (count_x <= 0) { // expression
-//            printResult(eval1(expr));
             result_print = 1;
+            EVAL_ERR = 0;
             result = eval1(expr);
         } else { // equation
+            memset(inputValue, '\0', 100);
+            var = 0;
+            on_graph = 0;
+            inputed_x = 0;
             result_print = 2;
         }
     } else if (buf[0] == 'B') { // backspace
@@ -187,7 +205,7 @@ uint8 checkValue(const char v) {
     if (v == ' ') return NON_VALUE;
     if (v == '.' || v >= '0' && v <= '9') return NUMBER;
     if (v == 'p' || v == 'e') return CONSTANT;
-    if (v == '!' || v == '(' || v == ')'
+    if (v == '!' || v == '(' || v == ')' || v == '^'
         || v == '+' || v == '-' || v == '*' || v == '/') return SYMBOL;
     if (v == 'x') return VARIABLE;
     if (v == 'P') return GRAPHIC;
@@ -440,24 +458,39 @@ void changeLabel(int page) {
 }
 
 void printExpr() {
-//    PA_ClearTextBg(UP_LCD);
+    PA_ClearTextBg(UP_LCD);
     PA_BoxTextNoWrap(UP_LCD, 1, 1, 30, 10, p_expr, 340);
-    PA_OutputText(UP_LCD, 1, 15, expr);
+//    PA_OutputText(UP_LCD, 1, 15, expr);
     overviewExpr();
     if (result_print == 1) printResult(result);
-    else if (result_print == 2 && inputed_x) {
-        if (on_graph) {
-            printGraph();
-        } else {
-            printResult(result);
+    else if (result_print == 2) {
+        printInputStr();
+        if (inputed_x) {
+            if (on_graph) {
+                printGraph();
+            } else {
+                printResult(result);
+            }
         }
     }
     
 }
+
+void printInputStr() {
+    char str[110];
+    if (on_graph) {
+       snprintf(str, 110,"x%d => %s", var+1, inputValue);
+    } else {
+       snprintf(str, 110,"x => %s", inputValue);
+    }
+    PA_BoxTextNoWrap(UP_LCD, 1, 5, 30, 18, str, 103) ;
+}
 void printResult(Num n) {
     char result[100];
-    if (n.num_flag) { // float
-        snprintf(result, 100, "  = %d.%d", (int)n.t.f, (int)((n.t.f - (int)n.t.f)*1000000000));
+    if (EVAL_ERR == 1) {
+        snprintf(result, 100, "  = ERROR");
+    } else if (n.num_flag) { // float
+        snprintf(result, 100, "  = %.6f", n.t.f);
     } else { // int
         snprintf(result, 100, "  = %d", n.t.i);
     }
@@ -489,11 +522,12 @@ void hiddenStripe() {
         }
     }
 }
+
 void printGraph() {
-    float step = var_x[1].t.i - var_x[0].t.i / 100.;
+/*    float step = (var_x[1].t.f - var_x[0].t.f) / 100.;
     float r[100];
     int i;
-    float max = 0, min = 0;
+    float max = -99999999, min = +999999;
     Num n, re;
 
     hiddenStripe();
@@ -503,22 +537,25 @@ void printGraph() {
     n.num_flag = 1;
     for (i = 0; i < 100; i++) {
         n.t.f = var_x[0].t.i + (step * i);
-        
         re = eval2(expr, n);
         if (re.num_flag == 0) {
             r[i] == (float)re.t.i;
         } else {
             r[i] == re.t.f;
         }
+        if (i == 0) {
+            min = max = r[i];
+        }
         if (r[i] < min) min = r[i];
         if (r[i] > max) max = r[i];
     }
 //    PA_Print(UP_LCD, "%d %d", max, min);
     for (i = 0; i < 100; i++) {
-        PA_Print(UP_LCD, "%d\n", 192-(int)(192*r[i]/(max-min)));
-        PA_Put8bitPixel(DOWN_LCD, 2*i+30, 192-(int)(192*r[i]/(max-min)), 1);  
-    }
-    
+        char dump[50];
+        snprintf(dump, 50, "%f %f", min, max);
+        PA_Print(UP_LCD, "%s\n", dump);
+        PA_Put8bitPixel(DOWN_LCD, 2*i+30, 192-(192*(r[i]-min)/(max-min)), 1);
+    } */
 }
 
 void overviewExpr() {

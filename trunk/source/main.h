@@ -46,11 +46,12 @@ int cursorX, cursorY;
 int printStrPos, exprPos, inputPos;
 int count_x;
 int overview_expr;
-int minPos, maxOrder, result_print, inputed_x, on_graph;
+int minPos, maxOrder, result_print, inputed_x, on_graph, var;
 Num var_x[2], result;
 char exprs[10][340];
 uint8 order[10];
 
+static int EVAL_ERR;
 static int page = 2;
 
 char expr[200], p_expr[340], buf[5];
@@ -91,6 +92,7 @@ void pushButton();
 void changeLabel(int);
 void printExpr();
 void printResult(Num);
+void printInputStr();
 void printGraph();
 void moveCursor(int);
 void overviewExpr();
